@@ -20,6 +20,7 @@ model User {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   Token           Token[]
+  Link            Link[]
 }
 
 model Token {
@@ -33,6 +34,71 @@ model Token {
   userId      Int
 }
 
+model Link {
+  id          Int         @id @default(autoincrement())
+  originalUrl String
+  shortCode   String?     @unique
+  user        User        @relation(fields: [userId], references: [id])
+  userId      Int
+  createdAt   DateTime    @default(now())
+  expiresAt   DateTime?
+  isExpired   Boolean     @default(false)
+  type        LinkType // Status keamanan link (benign, malicious, dll.)
+  score       Float? // Skor prediksi dari deteksi API
+  isHidden    Boolean     @default(false) // Menyembunyikan link berbahaya dari pengguna biasa
+  Click       Click[]
+  TagLink     TagLink[]
+  UTM         UTM?
+  Analytics   Analytics[]
+}
+
+model Click {
+  id          Int      @id @default(autoincrement())
+  link        Link     @relation(fields: [linkId], references: [id])
+  linkId      Int
+  timestamp   DateTime @default(now())
+  geoLocation String?
+  deviceType  String?
+  referrer    String?
+}
+
+model Analytics {
+  id             Int  @id @default(autoincrement())
+  link           Link @relation(fields: [linkId], references: [id])
+  linkId         Int
+  totalClicks    Int  @default(0)
+  uniqueVisitors Int  @default(0)
+  dailyClicks    Json
+}
+
+model Tag {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  createdAt DateTime  @default(now())
+  TagLink   TagLink[]
+}
+
+model TagLink {
+  id        Int      @id @default(autoincrement())
+  link      Link     @relation(fields: [linkId], references: [id])
+  linkId    Int
+  tag       Tag      @relation(fields: [tagId], references: [id])
+  tagId     Int
+  createdAt DateTime @default(now())
+}
+
+model UTM {
+  id        Int      @id @default(autoincrement())
+  link      Link     @relation(fields: [linkId], references: [id])
+  linkId    Int      @unique
+  source    String? // UTM source
+  medium    String? // UTM medium
+  campaign  String? // UTM campaign
+  term      String? // UTM term
+  content   String? // UTM content
+  createdAt DateTime @default(now())
+}
+
 enum Role {
   USER
   ADMIN
@@ -43,4 +109,12 @@ enum TokenType {
   REFRESH
   RESET_PASSWORD
   VERIFY_EMAIL
+}
+
+enum LinkType {
+  BENIGN
+  MALICIOUS
+  DEFACEMENT
+  MALWARE
+  PHISHING
 }

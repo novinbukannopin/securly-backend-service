@@ -6,11 +6,11 @@ services:
     restart: always
     container_name: postgresdb-util-test
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=secret
+      - POSTGRES_USER=novin
+      - POSTGRES_PASSWORD=novin
     ports:
       - '5432:5432'
-    volumes: 
+    volumes:
       - db:/var/lib/postgresql/data
 volumes:
   db:
