@@ -1,7 +1,7 @@
 {
-  "name": "prisma-express-typescript-boilerplate",
+  "name": "securly",
   "version": "1.0.0",
-  "description": "REST API Boilerplate with Node JS, TypeScript, Express and Prisma",
+  "description": "URL Shortening System with Malicious Detection use Node JS, TypeScript, Express and Prisma",
   "main": "src/index.ts",
   "repository": "https://github.com/antonio-lazaro/prisma-express-typescript-boilerplate.git",
   "scripts": {
