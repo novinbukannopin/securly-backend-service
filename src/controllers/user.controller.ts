@@ -3,6 +3,7 @@ import pick from '../utils/pick';
 import ApiError from '../utils/ApiError';
 import catchAsync from '../utils/catchAsync';
 import { userService } from '../services';
+import type { User } from '@prisma/client';
 
 const createUser = catchAsync(async (req, res) => {
   const { email, password, name, role } = req.body;
@@ -25,6 +26,12 @@ const getUser = catchAsync(async (req, res) => {
   res.send(user);
 });
 
+const getOwnProfile = catchAsync(async (req, res) => {
+  const user: User = req.user as User;
+  const users = await userService.getUserOwnProfile(Number(user.id));
+  res.send(users);
+});
+
 const updateUser = catchAsync(async (req, res) => {
   const user = await userService.updateUserById(req.params.userId, req.body);
   res.send(user);
@@ -38,6 +45,7 @@ const deleteUser = catchAsync(async (req, res) => {
 export default {
   createUser,
   getUsers,
+  getOwnProfile,
   getUser,
   updateUser,
   deleteUser

@@ -1,34 +1,56 @@
-import { CreateLinkDTO } from '../dto/create.link';
 import { v4 as uuid } from 'uuid';
 import prisma from '../client';
+import type { User, Link, UTM } from '@prisma/client';
+import { userService } from './index';
 
-const createLink = async (data: CreateLinkDTO) => {
-  const {
-    originalURL,
-    shortURL,
-    utmCampaign,
-    utmContent,
-    utmMedium,
-    utmSource,
-    utmTerm,
-    expiresAt
-  } = data;
+const createLink = async (data: { link: Link; utm: UTM }, user: User) => {
+  const isUserAvailable = await userService.getUserById(user.id);
+  if (!isUserAvailable) {
+    throw new Error('User not found');
+  }
+
+  const createShort = await generateShortURL(data.link.shortCode);
+  const checkShort = await checkUniqueShortURL(createShort);
+
   return prisma.link.create({
     data: {
-      originalUrl: originalURL,
-      shortCode: shortURL ? shortURL : await generateShortURL(shortURL),
-      expiresAt,
-      UTM: {
-        create: {
-          campaign: utmCampaign,
-          content: utmContent,
-          medium: utmMedium,
-          source: utmSource,
-          term: utmTerm
-        }
-      },
+      userId: Number(user.id),
+      originalUrl: data.link.originalUrl,
+      shortCode: createShort,
+      expiresAt: data.link.expiresAt,
       type: 'BENIGN',
-      userId: 1
+      isExpired: false,
+      isHidden: false,
+      UTM: data.utm
+        ? {
+            create: {
+              source: data.utm.source || null,
+              medium: data.utm.medium || null,
+              campaign: data.utm.campaign || null,
+              term: data.utm.term || null,
+              content: data.utm.content || null
+            }
+          }
+        : undefined
+    },
+    select: {
+      id: true,
+      userId: true,
+      originalUrl: true,
+      shortCode: true,
+      expiresAt: true,
+      type: true,
+      isExpired: true,
+      isHidden: true,
+      UTM: true
+    }
+  });
+};
+
+const getAllOwnLinks = async (data: User) => {
+  return prisma.link.findMany({
+    where: {
+      userId: Number(data.id)
     },
     include: {
       UTM: true
@@ -36,7 +58,15 @@ const createLink = async (data: CreateLinkDTO) => {
   });
 };
 
-export const generateShortURL = async (shortURL?: string) => {
+const getAllLinks = async () => {
+  return prisma.link.findMany({
+    include: {
+      UTM: true
+    }
+  });
+};
+
+export const generateShortURL = async (shortURL?: string | null) => {
   if (shortURL) {
     return shortURL;
   } else {
@@ -44,4 +74,22 @@ export const generateShortURL = async (shortURL?: string) => {
   }
 };
 
-export default { generateShortURL, createLink };
+export const checkUniqueShortURL = async (shortURL: string) => {
+  const link = await prisma.link.findUnique({
+    where: {
+      shortCode: shortURL
+    }
+  });
+
+  if (link) {
+    throw new Error('Short URL already exists');
+  }
+
+  return link;
+};
+
+export const setToHidden = async (type: string) => {
+  return type === 'MALICIOUS';
+};
+
+export default { generateShortURL, createLink, setToHidden, getAllOwnLinks, getAllLinks };
