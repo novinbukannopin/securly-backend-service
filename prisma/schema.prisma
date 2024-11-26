@@ -45,6 +45,7 @@ model Link {
   user        User        @relation(fields: [userId], references: [id])
   userId      Int
   createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
   expiresAt   DateTime?
   isExpired   Boolean     @default(false)
   type        LinkType // Status keamanan link (benign, malicious, dll.)

@@ -8,16 +8,16 @@ const router = express.Router();
 
 router
   .route('/')
-  .post(auth('manageUsers'), validate(userValidation.createUser), userController.createUser)
-  .get(auth('getUsers'), validate(userValidation.getUsers), userController.getUsers);
+  .post(auth('user:manage'), validate(userValidation.createUser), userController.createUser)
+  .get(auth('user:get'), validate(userValidation.getUsers), userController.getUsers);
 
 router.route('/me').get(auth('getUser'), userController.getOwnProfile);
 
 router
   .route('/:userId')
-  .get(auth('getUsers'), validate(userValidation.getUser), userController.getUser)
-  .patch(auth('manageUsers'), validate(userValidation.updateUser), userController.updateUser)
-  .delete(auth('manageUsers'), validate(userValidation.deleteUser), userController.deleteUser);
+  .get(auth('user:get'), validate(userValidation.getUser), userController.getUser)
+  .patch(auth('user:manage'), validate(userValidation.updateUser), userController.updateUser)
+  .delete(auth('user:manage'), validate(userValidation.deleteUser), userController.deleteUser);
 
 export default router;
 

@@ -1,26 +1,26 @@
 import { v4 as uuid } from 'uuid';
 import prisma from '../client';
 import type { User, Link, UTM } from '@prisma/client';
-import { userService } from './index';
 
-const createLink = async (data: { link: Link; utm: UTM }, user: User) => {
-  const isUserAvailable = await userService.getUserById(user.id);
-  if (!isUserAvailable) {
-    throw new Error('User not found');
-  }
+const create = async (data: Partial<Link> & { utm?: UTM }, user: User) => {
+  const isUserAvailable = await prisma.user.findUnique({
+    where: { id: user.id }
+  });
+  if (!isUserAvailable) throw new Error('User not found');
 
-  const createShort = await generateShortURL(data.link.shortCode);
-  const checkShort = await checkUniqueShortURL(createShort);
+  const shortCode = data.shortCode || (await generateShortCode());
+  await ensureShortURLUnique(shortCode);
 
   return prisma.link.create({
     data: {
-      userId: Number(user.id),
-      originalUrl: data.link.originalUrl,
-      shortCode: createShort,
-      expiresAt: data.link.expiresAt,
-      type: 'BENIGN',
-      isExpired: false,
-      isHidden: false,
+      userId: user.id,
+      originalUrl: data.originalUrl || '',
+      shortCode,
+      score: data.score || 0,
+      expiresAt: data.expiresAt || null,
+      type: data.type || 'BENIGN',
+      isExpired: data.isExpired || false,
+      isHidden: data.isHidden || false,
       UTM: data.utm
         ? {
             create: {
@@ -42,54 +42,143 @@ const createLink = async (data: { link: Link; utm: UTM }, user: User) => {
       type: true,
       isExpired: true,
       isHidden: true,
+      score: true,
       UTM: true
     }
   });
 };
 
-const getAllOwnLinks = async (data: User) => {
-  return prisma.link.findMany({
+const getAllOwn = async (user: User, limit = 10, page: number, isHidden: boolean) => {
+  const offset = (page - 1) * limit;
+  const [links, total] = await prisma.$transaction([
+    prisma.link.findMany({
+      where: {
+        userId: user.id,
+        ...(isHidden ? { isHidden } : {})
+      },
+      select: {
+        id: true,
+        userId: true,
+        originalUrl: true,
+        shortCode: true,
+        expiresAt: true,
+        type: true,
+        isExpired: true,
+        isHidden: true,
+        score: true,
+        UTM: true
+      },
+      skip: offset,
+      take: limit
+    }),
+    prisma.link.count({
+      where: {
+        userId: user.id
+      }
+    })
+  ]);
+
+  return {
+    links,
+    total,
+    page,
+    limit,
+    totalPages: Math.ceil(total / limit)
+  };
+};
+
+const getAll = async (showMe: boolean, user: User, limit = 10, page = 1, isHidden: boolean) => {
+  const offset = (page - 1) * limit;
+  const [links, total] = await prisma.$transaction([
+    prisma.link.findMany({
+      where: showMe
+        ? {
+            ...(isHidden ? { isHidden } : {})
+          }
+        : {
+            userId: {
+              not: user.id
+            },
+            ...(isHidden ? { isHidden } : {})
+          },
+      select: {
+        id: true,
+        userId: true,
+        originalUrl: true,
+        shortCode: true,
+        expiresAt: true,
+        type: true,
+        isExpired: true,
+        isHidden: true,
+        score: true,
+        UTM: true
+      },
+      skip: offset,
+      take: limit
+    }),
+    prisma.link.count({
+      where: showMe
+        ? {}
+        : {
+            userId: {
+              not: user.id
+            },
+            isHidden
+          }
+    })
+  ]);
+
+  return {
+    links,
+    total,
+    page,
+    limit,
+    totalPages: Math.ceil(total / limit)
+  };
+};
+
+const generateShortCode = async (): Promise<string> => {
+  return uuid().slice(0, 8);
+};
+
+const ensureShortURLUnique = async (shortCode: string) => {
+  const existing = await prisma.link.findUnique({
+    where: { shortCode }
+  });
+  if (existing) throw new Error('Short URL already exists');
+};
+
+const getById = async (user: User, id: string) => {
+  const link = await prisma.link.findFirst({
     where: {
-      userId: Number(data.id)
-    },
-    include: {
-      UTM: true
-    }
-  });
-};
-
-const getAllLinks = async () => {
-  return prisma.link.findMany({
-    include: {
-      UTM: true
-    }
-  });
-};
-
-export const generateShortURL = async (shortURL?: string | null) => {
-  if (shortURL) {
-    return shortURL;
-  } else {
-    return uuid().slice(0, 8);
-  }
-};
-
-export const checkUniqueShortURL = async (shortURL: string) => {
-  const link = await prisma.link.findUnique({
-    where: {
-      shortCode: shortURL
+      id: Number(id),
+      userId: user.id,
+      isHidden: false
     }
   });
 
-  if (link) {
-    throw new Error('Short URL already exists');
-  }
-
+  if (!link) throw new Error('Link not found');
   return link;
 };
 
-export const setToHidden = async (type: string) => {
-  return type === 'MALICIOUS';
+const setHidden = async (user: User, id: string, isHidden: boolean) => {
+  const link = await prisma.link.findFirst({
+    where: {
+      id: Number(id),
+      userId: user.id
+    }
+  });
+
+  if (!link) throw new Error('Link not found');
+
+  return prisma.link.update({
+    where: {
+      id: link.id
+    },
+    data: {
+      isHidden
+    }
+  });
 };
 
-export default { generateShortURL, createLink, setToHidden, getAllOwnLinks, getAllLinks };
+export default { create, getAllOwn, getAll, getById, setHidden };

@@ -1,14 +1,24 @@
 import { Role } from '@prisma/client';
 
 const allRoles = {
-  [Role.USER]: ['createLink', 'getUser', 'getAllOwnLinks'],
+  [Role.USER]: [
+    'link:create',
+    'user:get',
+    'link:update',
+    'link:get-own',
+    'link:get-by-id',
+    'link:update-is-hidden'
+  ],
   [Role.ADMIN]: [
-    'createLink',
-    'getUsers',
-    'getUser',
-    'getAllOwnLinks',
-    'getAllLinks',
-    'manageUsers'
+    'link:create',
+    'link:update',
+    'link:get-own',
+    'link:get-all',
+    'link:get-by-id',
+    'link:update-is-hidden',
+    'user:get',
+    'user:get-all',
+    'user:manage'
   ]
 };
 
