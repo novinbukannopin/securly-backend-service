@@ -304,6 +304,9 @@ const removeUTM = async (user: User, id: string) => {
   });
 };
 
+// TODO - Visit and redirect Link
+// TODO - QR Code
+
 export default {
   create,
   getAllOwn,

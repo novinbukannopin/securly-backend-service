@@ -22,6 +22,11 @@ const defaultRoutes = [
   }
 ];
 
+// TODO - add more features
+// TODO - Analytic route
+// TODO - Click route
+// TODO - Tags route
+
 const devRoutes = [
   // routes available only in development mode
   {
