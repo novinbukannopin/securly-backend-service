@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "description": "URL Shortening System with Malicious Detection use Node JS, TypeScript, Express and Prisma",
   "main": "src/index.ts",
-  "repository": "https://github.com/antonio-lazaro/prisma-express-typescript-boilerplate.git",
+  "repository": "https://github.com/novinbukannopin/securly-backend-service",
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
+  },
   "scripts": {
     "start": "yarn build && pm2 start ecosystem.config.json --no-daemon",
     "dev": "cross-env NODE_ENV=development nodemon src/index.ts",

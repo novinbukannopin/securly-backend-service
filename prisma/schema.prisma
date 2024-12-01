@@ -46,8 +46,7 @@ model Link {
   userId      Int
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
-  deletedAt   DateTime?
-  expiresAt   DateTime?
+  expiresAt   DateTime?   @db.Date
   isExpired   Boolean     @default(false)
   type        LinkType // Status keamanan link (benign, malicious, dll.)
   score       Float? // Skor prediksi dari deteksi API

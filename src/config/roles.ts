@@ -7,7 +7,8 @@ const allRoles = {
     'link:update',
     'link:get-own',
     'link:get-by-id',
-    'link:update-is-hidden'
+    'link:update-is-hidden',
+    'link:delete'
   ],
   [Role.ADMIN]: [
     'link:create',
@@ -16,6 +17,7 @@ const allRoles = {
     'link:get-all',
     'link:get-by-id',
     'link:update-is-hidden',
+    'link:delete',
     'user:get',
     'user:get-all',
     'user:manage'

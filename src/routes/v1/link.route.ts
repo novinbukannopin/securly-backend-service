@@ -27,4 +27,8 @@ router
   .route('/:id')
   .patch(auth('link:update'), validate(linkValidation.update), linkController.update);
 
+router.route('/:id').delete(auth('link:delete'), linkController.deleted);
+router.route('/:id/remove-utm').delete(auth('link:delete'), linkController.removeUTM);
+router.route('/:id/restore').patch(auth('link:delete'), linkController.restore);
+
 export default router;
