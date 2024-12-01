@@ -1,7 +1,7 @@
 import catchAsync from '../utils/catchAsync';
 import { linkService } from '../services';
 import httpStatus from 'http-status';
-import type { User } from '@prisma/client';
+import type { Link, User, UTM } from '@prisma/client';
 import { extractParamsGet } from '../utils/extractParamsGet';
 
 const create = catchAsync(async (req, res) => {
@@ -41,4 +41,12 @@ const updateIsHidden = catchAsync(async (req, res) => {
   res.status(httpStatus.NO_CONTENT).send();
 });
 
-export default { create, getAllOwn, getAll, getById, updateIsHidden };
+const update = catchAsync(async (req, res) => {
+  const user: User = req.user as User;
+  const data: Partial<Link> & { utm?: UTM | undefined } = req.body;
+
+  const link = await linkService.update(user, req.params.id, data);
+  res.status(httpStatus.OK).send(link);
+});
+
+export default { create, getAllOwn, getAll, getById, updateIsHidden, update };

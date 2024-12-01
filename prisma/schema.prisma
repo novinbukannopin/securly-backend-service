@@ -46,6 +46,7 @@ model Link {
   userId      Int
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
+  deletedAt   DateTime?
   expiresAt   DateTime?
   isExpired   Boolean     @default(false)
   type        LinkType // Status keamanan link (benign, malicious, dll.)
@@ -86,6 +87,7 @@ model Tag {
   id        Int       @id @default(autoincrement())
   name      String    @unique
   createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
   TagLink   TagLink[]
 
   @@map("tags")
@@ -98,20 +100,23 @@ model TagLink {
   tag       Tag      @relation(fields: [tagId], references: [id])
   tagId     Int
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("tag_links")
 }
 
 model UTM {
-  id        Int      @id @default(autoincrement())
-  link      Link     @relation(fields: [linkId], references: [id], onDelete: Cascade)
-  linkId    Int      @unique
+  id        Int       @id @default(autoincrement())
+  link      Link      @relation(fields: [linkId], references: [id], onDelete: Cascade)
+  linkId    Int       @unique
   source    String? // UTM source
   medium    String? // UTM medium
   campaign  String? // UTM campaign
   term      String? // UTM term
   content   String? // UTM content
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
   @@map("utms")
 }

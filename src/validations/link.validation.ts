@@ -26,6 +26,25 @@ const create = {
   })
 };
 
+const update = {
+  body: Joi.object().keys({
+    shortCode: Joi.string().optional(),
+    expiresAt: Joi.date().optional(),
+    isExpired: Joi.boolean().optional(),
+    isHidden: Joi.boolean().optional(),
+    utm: Joi.object()
+      .optional()
+      .keys({
+        source: Joi.string().optional(),
+        medium: Joi.string().optional(),
+        campaign: Joi.string().optional(),
+        term: Joi.string().optional(),
+        content: Joi.string().optional()
+      })
+      .allow(null)
+  })
+};
+
 const isHidden = {
   body: Joi.object().keys({
     isHidden: Joi.boolean().required()
@@ -34,5 +53,6 @@ const isHidden = {
 
 export default {
   create,
-  isHidden
+  isHidden,
+  update
 };

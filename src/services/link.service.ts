@@ -2,7 +2,7 @@ import { v4 as uuid } from 'uuid';
 import prisma from '../client';
 import type { User, Link, UTM } from '@prisma/client';
 
-const create = async (data: Partial<Link> & { utm?: UTM }, user: User) => {
+const create = async (data: Partial<Link> & { utm?: Partial<UTM> }, user: User) => {
   const isUserAvailable = await prisma.user.findUnique({
     where: { id: user.id }
   });
@@ -149,6 +149,7 @@ const ensureShortURLUnique = async (shortCode: string) => {
 };
 
 const getById = async (user: User, id: string) => {
+  console.log(user.email);
   const link = await prisma.link.findFirst({
     where: {
       id: Number(id),
@@ -171,6 +172,8 @@ const setHidden = async (user: User, id: string, isHidden: boolean) => {
 
   if (!link) throw new Error('Link not found');
 
+  if (link.isHidden === isHidden) throw new Error('Link already has the same hidden status');
+
   return prisma.link.update({
     where: {
       id: link.id
@@ -181,4 +184,52 @@ const setHidden = async (user: User, id: string, isHidden: boolean) => {
   });
 };
 
-export default { create, getAllOwn, getAll, getById, setHidden };
+const update = async (user: User, id: string, data: Partial<Link> & { utm?: Partial<UTM> }) => {
+  const link = await prisma.link.findFirst({
+    where: {
+      id: Number(id),
+      userId: user.id
+    },
+    include: {
+      UTM: true
+    }
+  });
+
+  if (!link) throw new Error('Link not found');
+
+  return prisma.link.update({
+    where: {
+      id: link.id
+    },
+    data: {
+      shortCode: data.shortCode || link.shortCode,
+      expiresAt: data.expiresAt || link.expiresAt,
+      isExpired: data.isExpired || link.isExpired,
+      isHidden: data.isHidden || link.isHidden,
+      UTM: {
+        upsert: {
+          create: {
+            ...data.utm
+          },
+          update: {
+            ...data.utm
+          }
+        }
+      }
+    },
+    select: {
+      id: true,
+      userId: true,
+      originalUrl: true,
+      shortCode: true,
+      expiresAt: true,
+      type: true,
+      isExpired: true,
+      isHidden: true,
+      score: true,
+      UTM: true
+    }
+  });
+};
+
+export default { create, getAllOwn, getAll, getById, setHidden, update };
