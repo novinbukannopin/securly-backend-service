@@ -110,6 +110,12 @@ const removeUTM = catchAsync(async (req, res) => {
   });
 });
 
+const redirect = catchAsync(async (req, res) => {
+  const { code } = req.params;
+  const response = await linkService.goto(code);
+  res.redirect(response.originalUrl);
+});
+
 export default {
   create,
   getAll,
@@ -119,5 +125,6 @@ export default {
   update,
   deleted,
   restore,
-  removeUTM
+  removeUTM,
+  redirect
 };

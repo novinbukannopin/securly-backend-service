@@ -304,8 +304,23 @@ const removeUTM = async (user: User, id: string) => {
   });
 };
 
-// TODO - Visit and redirect Link
-// TODO - QR Code
+const goto = async (code: string) => {
+  const link = await prisma.link.findFirst({
+    where: {
+      shortCode: code,
+      isHidden: false
+    },
+    select: {
+      originalUrl: true
+    }
+  });
+
+  if (!link) {
+    throw new ApiError(404, 'Link not found');
+  }
+
+  return link;
+};
 
 export default {
   create,
@@ -316,5 +331,6 @@ export default {
   update,
   softDelete,
   restore,
-  removeUTM
+  removeUTM,
+  goto
 };
