@@ -3,6 +3,7 @@ import catchAsync from '../utils/catchAsync';
 import { authService, userService, tokenService, emailService } from '../services';
 import exclude from '../utils/exclude';
 import { User } from '@prisma/client';
+import config from '../config/config';
 
 const register = catchAsync(async (req, res) => {
   const { email, password } = req.body;
@@ -74,7 +75,7 @@ const googleAuthCallback = catchAsync(async (req, res) => {
 
     const tokens = await tokenService.generateAuthTokens({ id: dbUser.id });
 
-    return res.status(200).json({ user: dbUser, tokens });
+    res.redirect(config.frontendUrl + '/callback?token=' + tokens.access.token);
   } catch (error) {
     console.error('Error during Google authentication', error);
     return res.status(500).json({
