@@ -8,14 +8,21 @@ const router = express.Router();
 
 router
   .route('/')
-  .post(auth('user:manage'), validate(userValidation.createUser), userController.createUser)
-  .get(auth('user:get'), validate(userValidation.getUsers), userController.getUsers);
+  // [INACTIVE]
+  // .post(auth('user:manage'), validate(userValidation.createUser), userController.createUser)
 
-router.route('/me').get(auth('getUser'), userController.getOwnProfile);
+  // [ACTIVE] ADMIN ONLY ROUTE
+  .get(auth('admin:get-all-users'), validate(userValidation.getUsers), userController.getUsers);
+
+router.route('/me').get(auth('profile:me'), userController.getOwnProfile);
 
 router
   .route('/:userId')
-  .get(auth('user:get'), validate(userValidation.getUser), userController.getUser)
+
+  // [ACTIVE] ADMIN ONLY ROUTE
+  .get(auth('admin:get-user-by-id'), validate(userValidation.getUser), userController.getUser)
+
+  // TODO 2
   .patch(auth('user:manage'), validate(userValidation.updateUser), userController.updateUser)
   .delete(auth('user:manage'), validate(userValidation.deleteUser), userController.deleteUser);
 
