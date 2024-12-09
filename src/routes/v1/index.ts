@@ -3,6 +3,8 @@ import authRoute from './auth.route';
 import userRoute from './user.route';
 import docsRoute from './docs.route';
 import config from '../../config/config';
+import linkRoute from './link.route';
+import indexRoute from './index.route';
 
 const router = express.Router();
 
@@ -14,8 +16,21 @@ const defaultRoutes = [
   {
     path: '/users',
     route: userRoute
+  },
+  {
+    path: '/links',
+    route: linkRoute
+  },
+  {
+    path: '/',
+    route: indexRoute
   }
 ];
+
+// TODO - add more features
+// TODO - Analytic route
+// TODO - Click route
+// TODO - Tags route
 
 const devRoutes = [
   // routes available only in development mode

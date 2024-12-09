@@ -57,5 +57,10 @@ export default {
       }
     },
     from: envVars.EMAIL_FROM
+  },
+  google: {
+    clientId: envVars.GOOGLE_CLIENT_ID,
+    clientSecret: envVars.GOOGLE_CLIENT_SECRET,
+    callbackURL: envVars.GOOGLE_CALLBACK_URL
   }
 };

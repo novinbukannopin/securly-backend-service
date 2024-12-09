@@ -17,8 +17,6 @@ const verifyCallback =
       return reject(new ApiError(httpStatus.UNAUTHORIZED, 'Please authenticate'));
     }
     req.user = user;
-    console.log('user', user);
-    console.log('req.params.userId', req.params.userId);
 
     if (requiredRights.length) {
       const userRights = roleRights.get(user.role) ?? [];

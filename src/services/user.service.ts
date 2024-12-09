@@ -1,4 +1,4 @@
-import { User, Role, Prisma } from '@prisma/client';
+import { User, Role, Provider, Prisma, OAuthAccount } from '@prisma/client';
 import httpStatus from 'http-status';
 import prisma from '../client';
 import ApiError from '../utils/ApiError';
@@ -11,9 +11,10 @@ import { encryptPassword } from '../utils/encryption';
  */
 const createUser = async (
   email: string,
-  password: string,
+  password?: string,
   name?: string,
-  role: Role = Role.USER
+  role: Role = Role.USER,
+  provider: Provider = Provider.DEFAULT
 ): Promise<User> => {
   if (await getUserByEmail(email)) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Email already taken');
@@ -22,8 +23,14 @@ const createUser = async (
     data: {
       email,
       name,
-      password: await encryptPassword(password),
-      role
+      password:
+        password && provider === Provider.DEFAULT ? await encryptPassword(password) : undefined,
+      role,
+      OAuthAccount: {
+        create: {
+          provider: provider
+        }
+      }
     }
   });
 };
@@ -68,6 +75,24 @@ const queryUsers = async <Key extends keyof User>(
     orderBy: sortBy ? { [sortBy]: sortType } : undefined
   });
   return users as Pick<User, Key>[];
+};
+
+const getUserOwnProfile = async <Key extends keyof User>(
+  userId: number,
+  keys: Key[] = [
+    'id',
+    'email',
+    'name',
+    'role',
+    'isEmailVerified',
+    'createdAt',
+    'updatedAt'
+  ] as Key[]
+): Promise<Pick<User, Key> | null> => {
+  return prisma.user.findUnique({
+    where: { id: userId },
+    select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {})
+  }) as Promise<Pick<User, Key> | null>;
 };
 
 /**
@@ -163,6 +188,7 @@ const deleteUserById = async (userId: number): Promise<User> => {
 export default {
   createUser,
   queryUsers,
+  getUserOwnProfile,
   getUserById,
   getUserByEmail,
   updateUserById,

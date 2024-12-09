@@ -11,16 +11,30 @@ datasource db {
 }
 
 model User {
-  id              Int      @id @default(autoincrement())
-  email           String   @unique
+  id              Int            @id @default(autoincrement())
+  email           String         @unique
   name            String?
-  password        String
-  role            Role     @default(USER)
-  isEmailVerified Boolean  @default(false)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  password        String?
+  role            Role           @default(USER)
+  isEmailVerified Boolean        @default(false)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
   Token           Token[]
   Link            Link[]
+  OAuthAccount    OAuthAccount[]
+
+  @@map("users")
+}
+
+model OAuthAccount {
+  id        Int      @id @default(autoincrement())
+  provider  Provider
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("oauth_accounts")
 }
 
 model Token {
@@ -32,6 +46,8 @@ model Token {
   createdAt   DateTime  @default(now())
   user        User      @relation(fields: [userId], references: [id])
   userId      Int
+
+  @@map("tokens")
 }
 
 model Link {
@@ -41,7 +57,9 @@ model Link {
   user        User        @relation(fields: [userId], references: [id])
   userId      Int
   createdAt   DateTime    @default(now())
-  expiresAt   DateTime?
+  updatedAt   DateTime    @updatedAt
+  deletedAt   DateTime?
+  expiresAt   DateTime?   @db.Date
   isExpired   Boolean     @default(false)
   type        LinkType // Status keamanan link (benign, malicious, dll.)
   score       Float? // Skor prediksi dari deteksi API
@@ -50,6 +68,8 @@ model Link {
   TagLink     TagLink[]
   UTM         UTM?
   Analytics   Analytics[]
+
+  @@map("links")
 }
 
 model Click {
@@ -60,6 +80,8 @@ model Click {
   geoLocation String?
   deviceType  String?
   referrer    String?
+
+  @@map("clicks")
 }
 
 model Analytics {
@@ -69,13 +91,18 @@ model Analytics {
   totalClicks    Int  @default(0)
   uniqueVisitors Int  @default(0)
   dailyClicks    Json
+
+  @@map("analytics")
 }
 
 model Tag {
   id        Int       @id @default(autoincrement())
   name      String    @unique
   createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
   TagLink   TagLink[]
+
+  @@map("tags")
 }
 
 model TagLink {
@@ -85,18 +112,25 @@ model TagLink {
   tag       Tag      @relation(fields: [tagId], references: [id])
   tagId     Int
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("tag_links")
 }
 
 model UTM {
-  id        Int      @id @default(autoincrement())
-  link      Link     @relation(fields: [linkId], references: [id])
-  linkId    Int      @unique
+  id        Int       @id @default(autoincrement())
+  link      Link      @relation(fields: [linkId], references: [id], onDelete: Cascade)
+  linkId    Int       @unique
   source    String? // UTM source
   medium    String? // UTM medium
   campaign  String? // UTM campaign
   term      String? // UTM term
   content   String? // UTM content
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@map("utms")
 }
 
 enum Role {
@@ -117,4 +151,10 @@ enum LinkType {
   DEFACEMENT
   MALWARE
   PHISHING
+}
+
+enum Provider {
+  DEFAULT
+  GOOGLE
+  GITHUB
 }

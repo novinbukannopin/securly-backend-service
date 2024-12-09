@@ -52,6 +52,37 @@ const verifyEmail = catchAsync(async (req, res) => {
   res.status(httpStatus.NO_CONTENT).send();
 });
 
+const googleAuthCallback = catchAsync(async (req, res) => {
+  try {
+    const user: User = req.user as User;
+
+    if (!user) {
+      return res.status(400).json({ message: 'Google authentication failed, user not found' });
+    }
+
+    let dbUser = await userService.getUserByEmail(user.email, [
+      'id',
+      'email',
+      'name',
+      'role',
+      'isEmailVerified'
+    ]);
+
+    if (!dbUser) {
+      dbUser = await userService.createUser(user.email, undefined, undefined, 'USER', 'GOOGLE');
+    }
+
+    const tokens = await tokenService.generateAuthTokens({ id: dbUser.id });
+
+    return res.status(200).json({ user: dbUser, tokens });
+  } catch (error) {
+    console.error('Error during Google authentication', error);
+    return res.status(500).json({
+      message: 'Error during Google authentication'
+    });
+  }
+});
+
 export default {
   register,
   login,
@@ -60,5 +91,6 @@ export default {
   forgotPassword,
   resetPassword,
   sendVerificationEmail,
-  verifyEmail
+  verifyEmail,
+  googleAuthCallback
 };

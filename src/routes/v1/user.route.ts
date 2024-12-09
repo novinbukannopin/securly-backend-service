@@ -8,14 +8,23 @@ const router = express.Router();
 
 router
   .route('/')
-  .post(auth('manageUsers'), validate(userValidation.createUser), userController.createUser)
-  .get(auth('getUsers'), validate(userValidation.getUsers), userController.getUsers);
+  // [INACTIVE]
+  // .post(auth('user:manage'), validate(userValidation.createUser), userController.createUser)
+
+  // [ACTIVE] ADMIN ONLY ROUTE
+  .get(auth('admin:get-all-users'), validate(userValidation.getUsers), userController.getUsers);
+
+router.route('/me').get(auth('profile:me'), userController.getOwnProfile);
 
 router
   .route('/:userId')
-  .get(auth('getUsers'), validate(userValidation.getUser), userController.getUser)
-  .patch(auth('manageUsers'), validate(userValidation.updateUser), userController.updateUser)
-  .delete(auth('manageUsers'), validate(userValidation.deleteUser), userController.deleteUser);
+
+  // [ACTIVE] ADMIN ONLY ROUTE
+  .get(auth('admin:get-user-by-id'), validate(userValidation.getUser), userController.getUser)
+
+  // TODO 2
+  .patch(auth('user:manage'), validate(userValidation.updateUser), userController.updateUser)
+  .delete(auth('user:manage'), validate(userValidation.deleteUser), userController.deleteUser);
 
 export default router;
 
