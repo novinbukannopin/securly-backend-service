@@ -83,16 +83,28 @@ const getUserOwnProfile = async <Key extends keyof User>(
     'id',
     'email',
     'name',
-    'role',
+    'language',
+    'username',
+    'dob',
     'isEmailVerified',
     'createdAt',
     'updatedAt'
   ] as Key[]
-): Promise<Pick<User, Key> | null> => {
-  return prisma.user.findUnique({
+): Promise<(Pick<User, Key> & { linkCount: number }) | null> => {
+  const user = await prisma.user.findUnique({
     where: { id: userId },
     select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {})
-  }) as Promise<Pick<User, Key> | null>;
+  });
+
+  if (!user) {
+    return null;
+  }
+
+  const linkCount = await prisma.link.count({
+    where: { userId: userId }
+  });
+
+  return { ...user, linkCount } as Pick<User, Key> & { linkCount: number };
 };
 
 /**
@@ -162,6 +174,12 @@ const updateUserById = async <Key extends keyof User>(
   }
   if (updateBody.email && (await getUserByEmail(updateBody.email as string))) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Email already taken');
+  }
+  if (
+    updateBody.username &&
+    (await prisma.user.findFirst({ where: { username: updateBody.username as string } }))
+  ) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Username already taken');
   }
   const updatedUser = await prisma.user.update({
     where: { id: user.id },

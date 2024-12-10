@@ -14,7 +14,10 @@ router
   // [ACTIVE] ADMIN ONLY ROUTE
   .get(auth('admin:get-all-users'), validate(userValidation.getUsers), userController.getUsers);
 
-router.route('/me').get(auth('profile:me'), userController.getOwnProfile);
+router
+  .route('/me')
+  .get(auth('profile:me'), userController.getOwnProfile)
+  .patch(auth('profile:me'), validate(userValidation.updateUser), userController.updateUser);
 
 router
   .route('/:userId')

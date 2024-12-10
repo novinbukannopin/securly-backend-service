@@ -28,13 +28,21 @@ const getUser = catchAsync(async (req, res) => {
 
 const getOwnProfile = catchAsync(async (req, res) => {
   const user: User = req.user as User;
-  const users = await userService.getUserOwnProfile(Number(user.id));
+  const users = await userService.getUserOwnProfile(Number(user.id), [
+    'id',
+    'email',
+    'name',
+    'username',
+    'dob',
+    'language'
+  ]);
   res.send(users);
 });
 
 const updateUser = catchAsync(async (req, res) => {
-  const user = await userService.updateUserById(req.params.userId, req.body);
-  res.send(user);
+  const user: User = req.user as User;
+  const users = await userService.updateUserById(user.id, req.body);
+  res.send(users);
 });
 
 const deleteUser = catchAsync(async (req, res) => {
