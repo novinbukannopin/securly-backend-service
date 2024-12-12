@@ -31,14 +31,15 @@ const loginUserWithEmailAndPassword = async (
     'createdAt',
     'updatedAt'
   ]);
-  if (!user?.password) {
+
+  if (user && !user?.password) {
     throw new ApiError(
       httpStatus.UNAUTHORIZED,
       'This account was created using Google Login. Please log in using Google'
     );
   }
-  if (!user || !(await isPasswordMatch(password, user.password as string))) {
-    throw new ApiError(httpStatus.UNAUTHORIZED, 'Incorrect email or password');
+  if (!user || (await isPasswordMatch(password, user.password as string))) {
+    throw new ApiError(httpStatus.UNAUTHORIZED, 'Incorrect email or passwords');
   }
   return exclude(user, ['password']);
 };
