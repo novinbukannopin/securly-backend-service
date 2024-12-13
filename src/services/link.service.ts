@@ -11,7 +11,6 @@ const linkSelectFields = () => ({
   type: true,
   score: true,
   isHidden: true,
-  isExpired: true,
   createdAt: true,
   updatedAt: true,
   deletedAt: true,
@@ -35,8 +34,8 @@ const create = async (data: Partial<Link> & { utm?: Partial<UTM> }, user: User) 
       shortCode,
       score: data.score || 0,
       expiresAt: data.expiresAt || null,
+      expiredRedirectUrl: data.expiredRedirectUrl || null,
       type: data.type || 'BENIGN',
-      isExpired: data.isExpired || false,
       isHidden: data.isHidden || false,
       UTM: data.utm
         ? {
@@ -217,7 +216,6 @@ const update = async (user: User, id: string, data: Partial<Link> & { utm?: Part
     data: {
       shortCode: data.shortCode || link.shortCode,
       expiresAt: data.expiresAt || link.expiresAt,
-      isExpired: data.isExpired || link.isExpired,
       isHidden: data.isHidden || link.isHidden,
       UTM: {
         upsert: {

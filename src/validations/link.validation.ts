@@ -6,7 +6,7 @@ const create = {
     originalUrl: Joi.string().uri().required(),
     shortCode: Joi.string().optional(),
     expiresAt: Joi.date().optional(),
-    isExpired: Joi.boolean().optional(),
+    expiredRedirectUrl: Joi.string().uri().optional(),
     type: Joi.string()
       .valid(...Object.values(TYPE))
       .optional(),
