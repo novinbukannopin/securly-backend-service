@@ -34,7 +34,10 @@ const allRoles = {
     'admin:get-all-users',
 
     // PROFILE
-    'profile:me'
+    'profile:me',
+
+    // REVIEW
+    'review:get-all'
   ]
 };
 

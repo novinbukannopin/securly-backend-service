@@ -5,6 +5,7 @@ import docsRoute from './docs.route';
 import config from '../../config/config';
 import linkRoute from './link.route';
 import indexRoute from './index.route';
+import reviewRoute from './review.route';
 
 const router = express.Router();
 
@@ -20,6 +21,10 @@ const defaultRoutes = [
   {
     path: '/links',
     route: linkRoute
+  },
+  {
+    path: '/reviews',
+    route: reviewRoute
   },
   {
     path: '/',

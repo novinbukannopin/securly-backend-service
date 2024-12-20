@@ -10,6 +10,34 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model URL {
+  id          Int      @id @default(autoincrement())
+  originalUrl String   @unique
+  type        LinkType
+  score       Float?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  Review      Review[]
+
+  @@map("urls")
+}
+
+model Review {
+  id        Int          @id @default(autoincrement())
+  url       URL          @relation(fields: [urlId], references: [id])
+  urlId     Int
+  reviewer  User         @relation(fields: [userId], references: [id])
+  userId    Int
+  action    ReviewAction
+  reason    String?
+  evidence  String?
+  status    ReviewStatus @default(PENDING)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@map("reviews")
+}
+
 model User {
   id              Int            @id @default(autoincrement())
   email           String         @unique
@@ -25,8 +53,21 @@ model User {
   Token           Token[]
   Link            Link[]
   OAuthAccount    OAuthAccount[]
+  Review          Review[]
 
   @@map("users")
+}
+
+enum ReviewAction {
+  APPROVE
+  REQUEST_REVIEW
+  REQUEST_UNBLOCK
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 model OAuthAccount {
@@ -154,6 +195,7 @@ enum LinkType {
   DEFACEMENT
   MALWARE
   PHISHING
+  BLOCKED
 }
 
 enum Provider {
