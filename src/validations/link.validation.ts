@@ -1,17 +1,19 @@
 import Joi from 'joi';
-import { TYPE } from '../types/type';
 
 const create = {
   body: Joi.object().keys({
     originalUrl: Joi.string().uri().required(),
     shortCode: Joi.string().optional(),
-    expiresAt: Joi.date().optional(),
-    expiredRedirectUrl: Joi.string().uri().optional(),
-    type: Joi.string()
-      .valid(...Object.values(TYPE))
+    comments: Joi.string().optional(),
+    expiration: Joi.object()
+      .keys({
+        datetime: Joi.date().optional(),
+        url: Joi.string().uri().optional()
+      })
       .optional(),
-    score: Joi.number().optional(),
-    isHidden: Joi.boolean().optional(),
+    type: Joi.string(),
+    qrcode: Joi.string().optional(),
+    tags: Joi.array().items(Joi.string()).optional(),
     utm: Joi.object()
       .optional()
       .keys({

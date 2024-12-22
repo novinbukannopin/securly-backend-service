@@ -3,6 +3,7 @@ import { linkService } from '../services';
 import httpStatus from 'http-status';
 import type { Link, User, UTM } from '@prisma/client';
 import { extractParamsGet } from '../utils/extractParamsGet';
+import { AnalyticsData } from '../types/response';
 
 const create = catchAsync(async (req, res) => {
   const user: User = req.user as User;
@@ -17,33 +18,16 @@ const create = catchAsync(async (req, res) => {
 
 const getAll = catchAsync(async (req, res) => {
   const showMe: boolean = req.query.show_me !== undefined ? req.query.show_me === 'true' : false;
-  const { user, page, limit, includeHidden, includeDeleted, includeExpired } =
-    extractParamsGet(req);
+  const { user, page, limit, includeHidden, includeDeleted } = extractParamsGet(req);
 
-  const links = await linkService.getAll(
-    showMe,
-    user,
-    limit,
-    page,
-    includeHidden,
-    includeDeleted,
-    includeExpired
-  );
+  const links = await linkService.getAll(showMe, user, limit, page, includeHidden, includeDeleted);
   res.status(httpStatus.OK).send(links);
 });
 
 const getAllOwn = catchAsync(async (req, res) => {
-  const { user, page, limit, includeHidden, includeDeleted, includeExpired } =
-    extractParamsGet(req);
+  const { user, page, limit, includeHidden, includeDeleted } = extractParamsGet(req);
 
-  const links = await linkService.getAllOwn(
-    user,
-    limit,
-    page,
-    includeHidden,
-    includeDeleted,
-    includeExpired
-  );
+  const links = await linkService.getAllOwn(user, limit, page, includeHidden, includeDeleted);
   res.status(httpStatus.OK).send(links);
 });
 
@@ -54,17 +38,17 @@ const getById = catchAsync(async (req, res) => {
   res.status(httpStatus.OK).send(link);
 });
 
-const updateIsHidden = catchAsync(async (req, res) => {
-  const user: User = req.user as User;
-  const { isHidden } = req.body;
-
-  const response = await linkService.setHidden(user, req.params.id, isHidden);
-  res.status(httpStatus.CREATED).send({
-    code: httpStatus.CREATED.toPrecision(),
-    message: 'Link hidden status updated successfully',
-    data: response
-  });
-});
+// const updateIsHidden = catchAsync(async (req, res) => {
+//   const user: User = req.user as User;
+//   const { isHidden } = req.body;
+//
+//   const response = await linkService.setHidden(user, req.params.id, isHidden);
+//   res.status(httpStatus.CREATED).send({
+//     code: httpStatus.CREATED.toPrecision(),
+//     message: 'Link hidden status updated successfully',
+//     data: response
+//   });
+// });
 
 const update = catchAsync(async (req, res) => {
   const user: User = req.user as User;
@@ -112,7 +96,10 @@ const removeUTM = catchAsync(async (req, res) => {
 
 const redirect = catchAsync(async (req, res) => {
   const { code } = req.params;
-  const response = await linkService.goto(code);
+  const headers = req.headers;
+  const { ip, userAgent } = { ip: headers['x-forwarded-for'], userAgent: headers['user-agent'] };
+  const IP = Array.isArray(ip) ? ip[0] : ip;
+  const response = await linkService.goto(code, IP, userAgent);
   res.redirect(response.originalUrl);
 });
 
@@ -121,7 +108,6 @@ export default {
   getAll,
   getAllOwn,
   getById,
-  updateIsHidden,
   update,
   deleted,
   restore,

@@ -95,48 +95,62 @@ model Token {
 }
 
 model Link {
-  id                 Int         @id @default(autoincrement())
+  id                 Int       @id @default(autoincrement())
   originalUrl        String
-  shortCode          String?     @unique
-  user               User        @relation(fields: [userId], references: [id])
+  shortCode          String?   @unique
+  type               LinkType?
+  comments           String?
+  user               User      @relation(fields: [userId], references: [id])
   userId             Int
-  createdAt          DateTime    @default(now())
-  updatedAt          DateTime    @updatedAt
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt()
   deletedAt          DateTime?
-  expiresAt          DateTime?   @db.Date
+  expiresAt          DateTime? @db.Date
   expiredRedirectUrl String?
-  type               LinkType // Status keamanan link (benign, malicious, dll.)
-  score              Float? // Skor prediksi dari deteksi API
-  isHidden           Boolean     @default(false) // Menyembunyikan link berbahaya dari pengguna biasa
-  Click              Click[]
+  qrcode             String?
+  Click              Click[] // Satu Link memiliki banyak Click
   TagLink            TagLink[]
   UTM                UTM?
-  Analytics          Analytics[]
 
   @@map("links")
 }
 
 model Click {
-  id          Int      @id @default(autoincrement())
-  link        Link     @relation(fields: [linkId], references: [id])
-  linkId      Int
-  timestamp   DateTime @default(now())
-  geoLocation String?
-  deviceType  String?
-  referrer    String?
+  id          String     @id @default(uuid())
+  linkId      Int // Relasi ke tabel Link
+  timestamp   DateTime   @default(now())
+  ip          String
+  location    String?
+  region      String?
+  country     String?
+  loc         String?
+  org         String?
+  postal      String?
+  timezone    String?
+  countryCode String?
+  userAgent   UserAgent? @relation(fields: [userAgentId], references: [id])
+  userAgentId String?
+
+  Link Link @relation(fields: [linkId], references: [id]) // Relasi ke tabel Link
 
   @@map("clicks")
 }
 
-model Analytics {
-  id             Int  @id @default(autoincrement())
-  link           Link @relation(fields: [linkId], references: [id])
-  linkId         Int
-  totalClicks    Int  @default(0)
-  uniqueVisitors Int  @default(0)
-  dailyClicks    Json
+model UserAgent {
+  id             String   @id @default(uuid())
+  ua             String
+  browser        String?
+  browserVersion String?
+  os             String?
+  osVersion      String?
+  cpuArch        String?
+  deviceType     String?
+  engine         String?
+  createdAt      DateTime @default(now())
 
-  @@map("analytics")
+  clicks Click[] // Relasi ke tabel Click
+
+  @@map("user_agents")
 }
 
 model Tag {

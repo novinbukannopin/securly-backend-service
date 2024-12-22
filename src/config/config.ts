@@ -63,5 +63,6 @@ export default {
     clientSecret: envVars.GOOGLE_CLIENT_SECRET,
     callbackURL: envVars.GOOGLE_CALLBACK_URL
   },
-  frontendUrl: envVars.SECURLY_FRONTEND_BASE_URL
+  frontendUrl: envVars.SECURLY_FRONTEND_BASE_URL,
+  ipinfoToken: envVars.IP_INFO_API_KEY
 };

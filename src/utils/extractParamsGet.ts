@@ -12,10 +12,8 @@ export const extractParamsGet = (req: any) => {
       ? Math.max(parseInt(req.query.limit as string, 10), 1)
       : 10;
 
-  // Parsing boolean untuk includeHidden, includeDeleted, dan includeExpired
   const includeHidden = req.query.hidden ? req.query.hidden === 'true' : undefined;
   const includeDeleted = req.query.deleted ? req.query.deleted === 'true' : undefined;
-  const includeExpired = req.query.expired ? req.query.expired === 'true' : undefined;
 
-  return { user, page, limit, includeHidden, includeDeleted, includeExpired };
+  return { user, page, limit, includeHidden, includeDeleted };
 };

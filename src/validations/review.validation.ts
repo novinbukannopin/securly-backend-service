@@ -7,12 +7,11 @@ const reviewValidation = {
     type: Joi.string()
       .valid('BENIGN', 'MALICIOUS', 'DEFACEMENT', 'MALWARE', 'PHISHING', 'BLOCKED')
       .required(),
-    reviewerId: Joi.number().integer().required(),
     action: Joi.string()
       .valid(...Object.values(ReviewAction))
       .required(),
-    reason: Joi.string().optional().allow(null),
-    evidence: Joi.string().optional().allow(null)
+    reason: Joi.string().optional().empty(''),
+    evidence: Joi.string().optional().empty('')
   })
 };
 

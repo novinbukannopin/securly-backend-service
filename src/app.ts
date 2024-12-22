@@ -12,6 +12,8 @@ import { authLimiter } from './middlewares/rateLimiter';
 import routes from './routes/v1';
 import { errorConverter, errorHandler } from './middlewares/error';
 import ApiError from './utils/ApiError';
+import { IPinfoWrapper } from 'node-ipinfo';
+import { UAParser } from 'ua-parser-js';
 
 const app = express();
 
@@ -42,6 +44,18 @@ app.use(
     credentials: true
   })
 );
+
+app.use(async (req, res, next) => {
+  if (req.method === 'GET') {
+    const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    const ipinfoWrapper = new IPinfoWrapper(config.ipinfoToken);
+    if (typeof ip === 'string') {
+      const details = await ipinfoWrapper.lookupIp(ip);
+    }
+    const data = UAParser(req.headers['user-agent']);
+  }
+  next();
+});
 // app.options('*', cors());
 
 // jwt authentication

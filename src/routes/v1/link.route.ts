@@ -15,13 +15,13 @@ router.route('/').get(auth('link:get-own'), linkController.getAllOwn);
 router.route('/all').get(auth('link:get-all'), linkController.getAll);
 router.route('/:id').get(auth('link:get-by-id'), linkController.getById);
 
-router
-  .route('/:id/hide')
-  .patch(
-    auth('link:update-is-hidden'),
-    validate(linkValidation.isHidden),
-    linkController.updateIsHidden
-  );
+// router
+// .route('/:id/hide')
+// .patch(
+//   auth('link:update-is-hidden'),
+//   validate(linkValidation.isHidden),
+//   linkController.updateIsHidden
+// );
 
 router
   .route('/:id')
