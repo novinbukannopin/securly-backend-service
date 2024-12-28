@@ -11,6 +11,7 @@ router
   .post(auth('link:create'), validate(linkValidation.create), linkController.create);
 
 router.route('/').get(auth('link:get-own'), linkController.getAllOwn);
+router.route('/analytics').get(auth('link:get-all'), linkController.getAnalytics);
 
 router.route('/all').get(auth('link:get-all'), linkController.getAll);
 router.route('/:id').get(auth('link:get-by-id'), linkController.getById);
@@ -22,6 +23,9 @@ router.route('/:id').get(auth('link:get-by-id'), linkController.getById);
 //   validate(linkValidation.isHidden),
 //   linkController.updateIsHidden
 // );
+router
+  .route('/:id/visible')
+  .post(auth('link:archive'), validate(linkValidation.archive), linkController.archive);
 
 router
   .route('/:id')

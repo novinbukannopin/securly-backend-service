@@ -50,13 +50,26 @@ const getById = catchAsync(async (req, res) => {
 //   });
 // });
 
+const archive = catchAsync(async (req, res) => {
+  const user: User = req.user as User;
+  const action = req.body.action as 'archive' | 'unarchive';
+
+  const response = await linkService.archive(user, req.params.id, action);
+  res.status(httpStatus.OK).send({
+    code: httpStatus.OK.toPrecision(),
+    message: `Link ${action} successfully`,
+    data: response
+  });
+});
+
 const update = catchAsync(async (req, res) => {
   const user: User = req.user as User;
-  const data: Partial<Link> & { utm?: UTM | undefined } = req.body;
+  const data: Partial<Link> & { utm?: Partial<UTM>; tag?: string[] } = req.body;
 
   const response = await linkService.update(user, req.params.id, data);
-  res.status(httpStatus.CREATED).send({
-    code: httpStatus.CREATED.toPrecision(),
+
+  res.status(httpStatus.OK).send({
+    code: httpStatus.OK,
     message: 'Link updated successfully',
     data: response
   });
@@ -103,6 +116,12 @@ const redirect = catchAsync(async (req, res) => {
   res.redirect(response.originalUrl);
 });
 
+const getAnalytics = catchAsync(async (req, res) => {
+  const user: User = req.user as User;
+  const response = await linkService.getAnalytics(user);
+  res.status(httpStatus.OK).send(response);
+});
+
 export default {
   create,
   getAll,
@@ -112,5 +131,7 @@ export default {
   deleted,
   restore,
   removeUTM,
-  redirect
+  redirect,
+  archive,
+  getAnalytics
 };

@@ -31,17 +31,20 @@ const create = {
 const update = {
   body: Joi.object().keys({
     shortCode: Joi.string().optional(),
-    expiresAt: Joi.date().optional(),
-    isExpired: Joi.boolean().optional(),
+    expiresAt: Joi.string().optional().allow(null).empty(''),
+    expiredRedirectUrl: Joi.string().uri().optional().allow(null).empty(''),
+    qrcode: Joi.string().optional(),
+    comments: Joi.string().optional(),
+    tags: Joi.array().items(Joi.string()).optional(),
     isHidden: Joi.boolean().optional(),
     utm: Joi.object()
       .optional()
       .keys({
-        source: Joi.string().optional(),
-        medium: Joi.string().optional(),
-        campaign: Joi.string().optional(),
-        term: Joi.string().optional(),
-        content: Joi.string().optional()
+        source: Joi.string().optional().empty(''),
+        medium: Joi.string().optional().empty(''),
+        campaign: Joi.string().optional().empty(''),
+        term: Joi.string().optional().empty(''),
+        content: Joi.string().optional().empty('')
       })
       .allow(null)
   })
@@ -53,8 +56,15 @@ const isHidden = {
   })
 };
 
+const archive = {
+  body: Joi.object().keys({
+    action: Joi.string().required().only().valid('archive', 'unarchive')
+  })
+};
+
 export default {
   create,
   isHidden,
-  update
+  update,
+  archive
 };

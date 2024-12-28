@@ -1,6 +1,6 @@
 import { v4 as uuid } from 'uuid';
 import prisma from '../client';
-import { User, Link, UTM, LinkType } from '@prisma/client';
+import { User, Link, UTM, LinkType, TagLink } from '@prisma/client';
 import ApiError from '../utils/ApiError';
 import { CreateLinkBody } from '../types/link';
 import { CustomParamsDictionary } from '../utils/catchAsync';
@@ -108,6 +108,7 @@ const getAllOwn = async (
       skip: offset,
       take: limit,
       include: {
+        UTM: true,
         _count: {
           select: {
             Click: true
@@ -232,20 +233,59 @@ const getById = async (user: User, id: string) => {
 //   });
 // };
 
-const update = async (user: User, id: string, data: Partial<Link> & { utm?: Partial<UTM> }) => {
+const update = async (
+  user: User,
+  id: string,
+  data: Partial<Link> & { utm?: Partial<UTM>; tags?: string[] }
+) => {
   const link = await prisma.link.findFirst({
     where: {
       id: Number(id),
       userId: user.id
     },
     include: {
-      UTM: true
+      UTM: true,
+      TagLink: {
+        include: {
+          tag: true
+        }
+      }
     }
   });
 
   if (!link) throw new ApiError(404, 'Link not found');
 
   await ensureShortURLUnique(data.shortCode || '');
+
+  const tagIds = await Promise.all(
+    (data.tags || []).map(async (tagName) => {
+      const tag = await prisma.tag.upsert({
+        where: { name: tagName },
+        update: {}, // No update needed for existing tags
+        create: { name: tagName }
+      });
+      return tag.id;
+    })
+  );
+
+  await prisma.tagLink.deleteMany({
+    where: {
+      linkId: link.id,
+      tagId: {
+        notIn: tagIds
+      }
+    }
+  });
+
+  const existingTagIds = link.TagLink.map((tagLink) => tagLink.tagId);
+  const newTagIds = tagIds.filter((id) => !existingTagIds.includes(id));
+
+  await prisma.tagLink.createMany({
+    data: newTagIds.map((tagId) => ({
+      linkId: link.id,
+      tagId
+    }))
+  });
 
   return prisma.link.update({
     where: {
@@ -254,6 +294,9 @@ const update = async (user: User, id: string, data: Partial<Link> & { utm?: Part
     data: {
       shortCode: data.shortCode || link.shortCode,
       expiresAt: data.expiresAt || link.expiresAt,
+      expiredRedirectUrl: data.expiredRedirectUrl || link.expiredRedirectUrl,
+      qrcode: data.qrcode || link.qrcode,
+      comments: data.comments || link.comments,
       UTM: {
         upsert: {
           create: {
@@ -348,12 +391,17 @@ const goto = async (code: string, ip?: string, userAgent?: string) => {
     },
     select: {
       originalUrl: true,
-      id: true
+      id: true,
+      deletedAt: true
     }
   });
 
   if (!link) {
     throw new ApiError(404, 'Link not found');
+  }
+
+  if (link.deletedAt) {
+    throw new ApiError(404, 'Link has been deleted');
   }
 
   const details = await ipinfoWrapper.lookupIp(ip as string);
@@ -394,6 +442,91 @@ const goto = async (code: string, ip?: string, userAgent?: string) => {
   return link;
 };
 
+const archive = async (user: User, id: string, action: 'archive' | 'unarchive') => {
+  const link = await prisma.link.findFirst({
+    where: {
+      id: Number(id),
+      userId: user.id
+    }
+  });
+
+  if (!link) throw new ApiError(404, 'Link not found');
+
+  const isArchived = !!link.deletedAt;
+
+  if (action === 'archive' && isArchived) {
+    throw new ApiError(400, 'Link is already archived');
+  }
+
+  if (action === 'unarchive' && !isArchived) {
+    throw new ApiError(400, 'Link is not archived');
+  }
+
+  return prisma.link.update({
+    where: {
+      id: link.id
+    },
+    data: {
+      deletedAt: action === 'archive' ? new Date() : null
+    }
+  });
+};
+
+const getAnalytics = async (user: User) => {
+  const links = await prisma.link.findMany({
+    where: {
+      userId: user.id
+    },
+    select: {
+      id: true,
+      originalUrl: true,
+      shortCode: true,
+      createdAt: true,
+      updatedAt: true,
+      deletedAt: true,
+      expiresAt: true,
+      expiredRedirectUrl: true,
+      UTM: true,
+      TagLink: {
+        select: {
+          tag: {
+            select: {
+              name: true
+            }
+          }
+        }
+      },
+      Click: {
+        select: {
+          id: true,
+          ip: true,
+          loc: true,
+          region: true,
+          country: true,
+          countryCode: true,
+          timezone: true,
+          org: true,
+          postal: true,
+          userAgent: {
+            select: {
+              ua: true,
+              browser: true,
+              browserVersion: true,
+              os: true,
+              osVersion: true,
+              cpuArch: true,
+              deviceType: true,
+              engine: true
+            }
+          }
+        }
+      }
+    }
+  });
+
+  return links;
+};
+
 export default {
   create,
   getAllOwn,
@@ -403,5 +536,7 @@ export default {
   softDelete,
   restore,
   removeUTM,
-  goto
+  goto,
+  archive,
+  getAnalytics
 };

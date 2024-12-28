@@ -9,6 +9,7 @@ const allRoles = {
     'link:get-by-id',
     'link:update-is-hidden',
     'link:delete',
+    'link:archive',
 
     // PROFILE
     'profile:me'
@@ -24,6 +25,8 @@ const allRoles = {
 
     // LINK ADMIN
     'link:delete',
+
+    'link:archive',
 
     // USER
     'admin:get-user-by-id',
