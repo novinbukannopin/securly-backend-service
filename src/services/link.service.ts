@@ -130,13 +130,35 @@ const getAllOwn = async (
     })
   ]);
 
+  const tags = await getUniqueTagsByUser(user);
+
   return {
     links,
     total,
     page,
     limit,
-    totalPages: Math.ceil(total / limit)
+    totalPages: Math.ceil(total / limit),
+    tags: tags
   };
+};
+
+const getUniqueTagsByUser = async (user: User) => {
+  const tags = await prisma.tag.findMany({
+    where: {
+      TagLink: {
+        some: {
+          link: {
+            userId: user.id
+          }
+        }
+      }
+    },
+    select: {
+      name: true
+    }
+  });
+
+  return tags.map((tag) => tag.name);
 };
 
 const getAll = async (
@@ -473,58 +495,217 @@ const archive = async (user: User, id: string, action: 'archive' | 'unarchive') 
 };
 
 const getAnalytics = async (user: User) => {
-  const links = await prisma.link.findMany({
+  const topClickedLinks = await prisma.link.findMany({
     where: {
       userId: user.id
     },
+    include: {
+      Click: true
+    }
+  });
+
+  const topLinks = topClickedLinks
+    .map((link) => ({
+      shortCode: link.shortCode,
+      clicks: link.Click.length,
+      originalUrl: link.originalUrl
+    }))
+    .sort((a, b) => b.clicks - a.clicks) // Sort by clicks descending
+    .slice(0, 5); // Take top 5
+
+  const neverClickedLinks = await prisma.link.findMany({
+    where: {
+      userId: user.id,
+      Click: {
+        none: {} // No clicks associated with the link
+      }
+    },
     select: {
-      id: true,
-      originalUrl: true,
       shortCode: true,
-      createdAt: true,
-      updatedAt: true,
-      deletedAt: true,
-      expiresAt: true,
-      expiredRedirectUrl: true,
-      UTM: true,
+      originalUrl: true,
+      createdAt: true
+    }
+  });
+
+  const transformedNeverClickedLinks = neverClickedLinks
+    .map((link) => ({
+      shortCode: link.shortCode,
+      originalUrl: link.originalUrl,
+      createdAt: link.createdAt.toISOString().split('T')[0] // Format date
+    }))
+    .slice(0, 5); // Take top 5
+
+  const startOfThisWeek = new Date();
+  startOfThisWeek.setDate(startOfThisWeek.getDate() - startOfThisWeek.getDay());
+  startOfThisWeek.setHours(0, 0, 0, 0);
+
+  const startOfLastWeek = new Date(startOfThisWeek);
+  startOfLastWeek.setDate(startOfLastWeek.getDate() - 7);
+
+  const endOfLastWeek = new Date(startOfThisWeek);
+  endOfLastWeek.setDate(endOfLastWeek.getDate() - 1);
+
+  // Total overall
+  const totalLinksOverall = await prisma.link.count({ where: { userId: user.id } });
+  const activeLinksOverall = await prisma.link.count({
+    where: { userId: user.id, expiresAt: null, deletedAt: null }
+  });
+  const expiredLinksOverall = await prisma.link.count({
+    where: { userId: user.id, expiresAt: { not: null } }
+  });
+  const archivedLinksOverall = await prisma.link.count({
+    where: { userId: user.id, deletedAt: { not: null } }
+  });
+
+  // This week
+  const totalLinksThisWeek = await prisma.link.count({
+    where: {
+      userId: user.id,
+      createdAt: { gte: startOfThisWeek }
+    }
+  });
+  const activeLinksThisWeek = await prisma.link.count({
+    where: {
+      userId: user.id,
+      expiresAt: null,
+      deletedAt: null,
+      createdAt: { gte: startOfThisWeek }
+    }
+  });
+  const expiredLinksThisWeek = await prisma.link.count({
+    where: {
+      userId: user.id,
+      expiresAt: { not: null },
+      createdAt: { gte: startOfThisWeek }
+    }
+  });
+  const archivedLinksThisWeek = await prisma.link.count({
+    where: {
+      userId: user.id,
+      deletedAt: { not: null },
+      createdAt: { gte: startOfThisWeek }
+    }
+  });
+
+  // Last week
+  const totalLinksLastWeek = await prisma.link.count({
+    where: {
+      userId: user.id,
+      createdAt: { gte: startOfLastWeek, lte: endOfLastWeek }
+    }
+  });
+  const activeLinksLastWeek = await prisma.link.count({
+    where: {
+      userId: user.id,
+      expiresAt: null,
+      deletedAt: null,
+      createdAt: { gte: startOfLastWeek, lte: endOfLastWeek }
+    }
+  });
+  const expiredLinksLastWeek = await prisma.link.count({
+    where: {
+      userId: user.id,
+      expiresAt: { not: null },
+      createdAt: { gte: startOfLastWeek, lte: endOfLastWeek }
+    }
+  });
+  const archivedLinksLastWeek = await prisma.link.count({
+    where: {
+      userId: user.id,
+      deletedAt: { not: null },
+      createdAt: { gte: startOfLastWeek, lte: endOfLastWeek }
+    }
+  });
+
+  // Percentage changes
+  const calculatePercentageChange = (current: number, previous: number) => {
+    if (previous === 0) return current > 0 ? 100 : 0;
+    return ((current - previous) / previous) * 100;
+  };
+
+  const tagsUsage = await prisma.tag.findMany({
+    where: {
       TagLink: {
-        select: {
-          tag: {
-            select: {
-              name: true
-            }
+        some: {
+          link: {
+            userId: user.id
           }
         }
-      },
-      Click: {
-        select: {
-          id: true,
-          ip: true,
-          loc: true,
-          region: true,
-          country: true,
-          countryCode: true,
-          timezone: true,
-          org: true,
-          postal: true,
-          userAgent: {
-            select: {
-              ua: true,
-              browser: true,
-              browserVersion: true,
-              os: true,
-              osVersion: true,
-              cpuArch: true,
-              deviceType: true,
-              engine: true
-            }
+      }
+    },
+    include: {
+      TagLink: {
+        where: {
+          link: {
+            userId: user.id
           }
         }
       }
     }
   });
 
-  return links;
+  const listTags = tagsUsage.map((tag) => tag.name);
+
+  const tagsWithUsage = tagsUsage.map((tag) => ({
+    tagName: tag.name,
+    usageCount: tag.TagLink.length
+  }));
+
+  const linkTypes = await prisma.link.groupBy({
+    where: {
+      userId: user.id
+    },
+    by: ['type'],
+    _count: {
+      type: true
+    }
+  });
+
+  return {
+    topLinks,
+    neverClickedLinks: transformedNeverClickedLinks,
+    links: {
+      total: {
+        overall: totalLinksOverall,
+        thisWeek: totalLinksThisWeek,
+        lastWeek: totalLinksLastWeek,
+        percentageChange: {
+          thisWeek: calculatePercentageChange(totalLinksThisWeek, totalLinksLastWeek)
+        }
+      },
+      active: {
+        overall: activeLinksOverall,
+        thisWeek: activeLinksThisWeek,
+        lastWeek: activeLinksLastWeek,
+        percentageChange: {
+          thisWeek: calculatePercentageChange(activeLinksThisWeek, activeLinksLastWeek)
+        }
+      },
+      expired: {
+        overall: expiredLinksOverall,
+        thisWeek: expiredLinksThisWeek,
+        lastWeek: expiredLinksLastWeek,
+        percentageChange: {
+          thisWeek: calculatePercentageChange(expiredLinksThisWeek, expiredLinksLastWeek)
+        }
+      },
+      archived: {
+        overall: archivedLinksOverall,
+        thisWeek: archivedLinksThisWeek,
+        lastWeek: archivedLinksLastWeek,
+        percentageChange: {
+          thisWeek: calculatePercentageChange(archivedLinksThisWeek, archivedLinksLastWeek)
+        }
+      }
+    },
+    tags: {
+      list: listTags,
+      usage: tagsWithUsage
+    },
+    type: {
+      list: linkTypes
+    }
+  };
 };
 
 export default {
