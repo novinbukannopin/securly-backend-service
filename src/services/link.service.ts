@@ -3,11 +3,10 @@ import prisma from '../client';
 import { User, Link, UTM, LinkType, TagLink } from '@prisma/client';
 import ApiError from '../utils/ApiError';
 import { CreateLinkBody } from '../types/link';
-import { CustomParamsDictionary } from '../utils/catchAsync';
-import * as QueryString from 'node:querystring';
 import { UAParser } from 'ua-parser-js';
 import { IPinfoWrapper } from 'node-ipinfo';
 import config from '../config/config';
+import { subDays } from 'date-fns';
 
 const linkSelectFields = () => ({
   id: true,
@@ -708,6 +707,164 @@ const getAnalytics = async (user: User) => {
   };
 };
 
+type InsightRecord = Record<string, number>;
+
+interface Insights {
+  location: InsightRecord;
+  region: InsightRecord;
+  country: InsightRecord;
+  browser: InsightRecord;
+  browserVersion: InsightRecord;
+  os: InsightRecord;
+  osVersion: InsightRecord;
+  cpuArch: InsightRecord;
+  deviceType: InsightRecord;
+}
+
+interface ClicksResponse {
+  data: { date: string; totalClicks: number }[];
+  totalClick: number;
+  insights: Insights;
+}
+
+
+const getClicks = async (
+  user: User,
+  filter?: '24h' | '7 days' | '28 days',
+  startDate?: string,
+  endDate?: string,
+  shortCode?: string // Tambahkan parameter opsional shortCode
+) => {
+  let rangeStartDate: Date | undefined;
+  let rangeEndDate: Date | undefined;
+
+  if (filter) {
+    const now = new Date();
+    if (filter === '24h') {
+      rangeStartDate = subDays(now, 1); // 1 hari sebelumnya
+    } else if (filter === '7 days') {
+      rangeStartDate = subDays(now, 7); // 7 hari sebelumnya
+    } else if (filter === '28 days') {
+      rangeStartDate = subDays(now, 28); // 28 hari sebelumnya
+    }
+    rangeEndDate = now;
+  } else {
+    rangeStartDate = startDate ? new Date(startDate) : undefined;
+    rangeEndDate = endDate ? new Date(endDate) : undefined;
+  }
+
+  // Fetch raw clicks data
+  const rawClicksData = await prisma.click.findMany({
+    where: {
+      Link: {
+        userId: user.id,
+        ...(shortCode ? { shortCode } : {}), // Filter berdasarkan shortCode jika ada
+      },
+      timestamp: {
+        gte: rangeStartDate,
+        lte: rangeEndDate,
+      },
+    },
+    select: {
+      Link: {
+        select: {
+          shortCode: true,
+          originalUrl: true,
+        },
+      },
+      timestamp: true,
+      location: true,
+      region: true,
+      country: true,
+      userAgent: {
+        select: {
+          browser: true,
+          browserVersion: true,
+          os: true,
+          osVersion: true,
+          cpuArch: true,
+          deviceType: true,
+        },
+      },
+    },
+  });
+
+  // Process clicks data
+  const clicksData = rawClicksData.reduce((acc, curr) => {
+    const date = curr.timestamp.toISOString().split('T')[0];
+    if (!acc[date]) {
+      acc[date] = 0;
+    }
+    acc[date]++;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const formattedData = Object.entries(clicksData)
+    .map(([date, totalClicks]) => ({
+      date,
+      totalClicks,
+    }))
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+  // Count total clicks
+  const totalClick = await prisma.click.count({
+    where: {
+      Link: {
+        userId: user.id,
+        ...(shortCode ? { shortCode } : {}), // Filter berdasarkan shortCode jika ada
+      },
+      timestamp: {
+        gte: rangeStartDate,
+        lte: rangeEndDate,
+      },
+    },
+  });
+
+  // Generate insights
+  const insights: Insights = {
+    location: {},
+    region: {},
+    country: {},
+    browser: {},
+    browserVersion: {},
+    os: {},
+    osVersion: {},
+    cpuArch: {},
+    deviceType: {},
+  };
+
+  rawClicksData.forEach((click) => {
+    const fields: (keyof Insights)[] = [
+      'location',
+      'region',
+      'country',
+      'browser',
+      'browserVersion',
+      'os',
+      'osVersion',
+      'cpuArch',
+      'deviceType',
+    ];
+
+    fields.forEach((field) => {
+      // @ts-ignore
+      const value = click[field] || click.userAgent?.[field];
+      if (value) {
+        insights[field][value] = (insights[field][value] || 0) + 1;
+      }
+    });
+  });
+
+  return {
+    click: {
+      data: formattedData,
+      totalClick,
+    },
+    interaction: insights,
+  };
+};
+
+
 export default {
   create,
   getAllOwn,
@@ -719,5 +876,6 @@ export default {
   removeUTM,
   goto,
   archive,
-  getAnalytics
+  getAnalytics,
+  getClicks
 };

@@ -11,6 +11,7 @@ const allRoles = {
     'link:delete',
     'link:archive',
     'link:get-analytics',
+    'link:get-clicks',
 
     // PROFILE
     'profile:me'
@@ -25,6 +26,7 @@ const allRoles = {
     'link:update-is-hidden',
 
     'link:get-analytics',
+    'link:get-clicks',
 
     // LINK ADMIN
     'link:delete',

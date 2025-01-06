@@ -12,6 +12,7 @@ router
 
 router.route('/').get(auth('link:get-own'), linkController.getAllOwn);
 router.route('/analytics').get(auth('link:get-analytics'), linkController.getAnalytics);
+router.route('/analytics/clicks').get(auth('link:get-clicks'), linkController.getAnalyticsClicks);
 
 router.route('/all').get(auth('link:get-all'), linkController.getAll);
 router.route('/:id').get(auth('link:get-by-id'), linkController.getById);

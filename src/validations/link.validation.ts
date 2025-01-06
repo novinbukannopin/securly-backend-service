@@ -38,15 +38,15 @@ const update = {
     tags: Joi.array().items(Joi.string()).optional(),
     isHidden: Joi.boolean().optional(),
     utm: Joi.object()
-      .optional()
       .keys({
-        source: Joi.string().optional().empty(''),
-        medium: Joi.string().optional().empty(''),
-        campaign: Joi.string().optional().empty(''),
-        term: Joi.string().optional().empty(''),
-        content: Joi.string().optional().empty('')
+        source: Joi.string().optional().allow(''),
+        medium: Joi.string().optional().allow(''),
+        campaign: Joi.string().optional().allow(''),
+        term: Joi.string().optional().allow(''),
+        content: Joi.string().optional().allow('')
       })
-      .allow(null)
+      .optional()
+      .allow('')
   })
 };
 

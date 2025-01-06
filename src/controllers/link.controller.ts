@@ -122,6 +122,27 @@ const getAnalytics = catchAsync(async (req, res) => {
   res.status(httpStatus.OK).send(response);
 });
 
+export const getAnalyticsClicks = catchAsync(async (req, res) => {
+  const { filter, startDate, endDate, shortCode } = req.query;
+
+  const user = req.user as User;
+
+  if (filter && !['24h', '7 days', '28 days'].includes(filter as string)) {
+   throw new Error('Invalid filter');
+  }
+
+  const clickData = await linkService.getClicks(
+    user,
+    filter as '24h' | '7 days' | '28 days',
+    startDate as string | undefined,
+    endDate as string | undefined,
+    shortCode as string | undefined
+  );
+
+  res.status(httpStatus.OK).send(clickData);
+});
+
+
 export default {
   create,
   getAll,
@@ -133,5 +154,6 @@ export default {
   removeUTM,
   redirect,
   archive,
-  getAnalytics
+  getAnalytics,
+  getAnalyticsClicks
 };

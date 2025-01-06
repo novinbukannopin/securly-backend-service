@@ -1,18 +1,15 @@
-import { RequestHandler } from 'express';
-import { Request, Response, NextFunction } from 'express-serve-static-core';
-
-export interface CustomParamsDictionary {
-  [key: string]: any;
-}
+import { RequestHandler, Request, Response, NextFunction } from 'express';
 
 const catchAsync =
-  (fn: RequestHandler<CustomParamsDictionary, any, any, qs.ParsedQs, Record<string, any>>) =>
+  <P = any, ResBody = any, ReqBody = any, ReqQuery = any>(
+    fn: RequestHandler<P, ResBody, ReqBody, ReqQuery>
+  ) =>
   (
-    req: Request<CustomParamsDictionary, any, any, any, Record<string, any>>,
-    res: Response<any, Record<string, any>, number>,
+    req: Request<P, ResBody, ReqBody, ReqQuery>,
+    res: Response<ResBody>,
     next: NextFunction
   ) => {
-    Promise.resolve(fn(req, res, next)).catch((err) => next(err));
+    Promise.resolve(fn(req, res, next)).catch(next);
   };
 
 export default catchAsync;
