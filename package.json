@@ -14,7 +14,7 @@
   "packageManager": "pnpm@9.1.2",
   "scripts": {
     "rimraf": "./node_modules/rimraf/bin.js",
-    "start": "cross-env NODE_ENV=production prisma migrate deploy node build/src/index.js",
+    "start": "cross-env NODE_ENV=production pnpx prisma migrate deploy && node build/src/index.js",
     "dev": "cross-env NODE_ENV=development nodemon src/index.ts",
     "test": "docker-compose -f docker-compose.only-db-test.yml up -d && yarn db:push && jest -i --colors --verbose --detectOpenHandles && docker-compose -f docker-compose.only-db-test.yml down",
     "test:watch": "docker-compose -f docker-compose.only-db-test.yml up -d && yarn db:push && jest -i --watchAll && docker-compose -f docker-compose.only-db-test.yml down",
@@ -118,6 +118,7 @@
     "passport-google-oauth20": "^2.0.0",
     "passport-jwt": "^4.0.0",
     "pm2": "^5.2.2",
+    "prisma": "^4.10.1",
     "rimraf": "^6.0.1",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^4.6.0",
