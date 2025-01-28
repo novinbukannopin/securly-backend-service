@@ -33,11 +33,13 @@ const updateUser = {
   }),
   body: Joi.object()
     .keys({
-      email: Joi.string().email(),
-      password: Joi.string().custom(password),
-      name: Joi.string()
+      password: Joi.string().custom(password).optional(),
+      name: Joi.string().optional().empty(''),
+      username: Joi.string().optional().empty(''),
+      dob: Joi.date().optional(),
+      language: Joi.string().optional().empty('')
     })
-    .min(1)
+    .optional()
 };
 
 const deleteUser = {

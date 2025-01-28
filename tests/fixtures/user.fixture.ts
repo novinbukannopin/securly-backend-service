@@ -32,6 +32,9 @@ export const admin = {
 
 export const insertUsers = async (users: Prisma.UserCreateManyInput[]) => {
   await prisma.user.createMany({
-    data: users.map((user) => ({ ...user, password: bcrypt.hashSync(user.password, salt) }))
+    data: users.map((user) => ({
+      ...user,
+      password: user.password ? bcrypt.hashSync(user.password, salt) : undefined
+    }))
   });
 };

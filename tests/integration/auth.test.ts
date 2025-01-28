@@ -15,6 +15,7 @@ import { userOne, admin, insertUsers } from '../fixtures/user.fixture';
 import { Role, TokenType, User } from '@prisma/client';
 import prisma from '../../src/client';
 import { roleRights } from '../../src/config/roles';
+import { isPasswordMatch } from '../../src/utils/encryption';
 
 setupTestDB();
 
@@ -375,7 +376,9 @@ describe('Auth routes', () => {
         .expect(httpStatus.NO_CONTENT);
 
       const dbUser = (await prisma.user.findUnique({ where: { id: dbUserOne.id } })) as User;
-      const isPasswordMatch = await bcrypt.compare('password2', dbUser.password);
+      if (dbUser.password != null) {
+        const isPasswordMatch = await bcrypt.compare('password2', dbUser.password);
+      }
       expect(isPasswordMatch).toBe(true);
 
       const dbResetPasswordTokenCount = await prisma.token.count({

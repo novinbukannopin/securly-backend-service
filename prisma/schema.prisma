@@ -10,16 +10,75 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model URL {
+  id          Int      @id @default(autoincrement())
+  originalUrl String   @unique
+  type        LinkType
+  score       Float?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  Review      Review[]
+
+  @@map("urls")
+}
+
+model Review {
+  id        Int          @id @default(autoincrement())
+  url       URL          @relation(fields: [urlId], references: [id])
+  urlId     Int
+  reviewer  User         @relation(fields: [userId], references: [id])
+  userId    Int
+  action    ReviewAction
+  reason    String?
+  evidence  String?
+  status    ReviewStatus @default(PENDING)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@map("reviews")
+}
+
 model User {
-  id              Int      @id @default(autoincrement())
-  email           String   @unique
+  id              Int            @id @default(autoincrement())
+  email           String         @unique
   name            String?
-  password        String
-  role            Role     @default(USER)
-  isEmailVerified Boolean  @default(false)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  username        String?        @unique
+  password        String?
+  dob             DateTime?
+  language        String?
+  role            Role           @default(USER)
+  isEmailVerified Boolean        @default(false)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
   Token           Token[]
+  Link            Link[]
+  OAuthAccount    OAuthAccount[]
+  Review          Review[]
+
+  @@map("users")
+}
+
+enum ReviewAction {
+  APPROVE
+  REQUEST_REVIEW
+  REQUEST_UNBLOCK
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model OAuthAccount {
+  id        Int      @id @default(autoincrement())
+  provider  Provider
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("oauth_accounts")
 }
 
 model Token {
@@ -31,6 +90,105 @@ model Token {
   createdAt   DateTime  @default(now())
   user        User      @relation(fields: [userId], references: [id])
   userId      Int
+
+  @@map("tokens")
+}
+
+model Link {
+  id                 Int       @id @default(autoincrement())
+  originalUrl        String
+  shortCode          String?   @unique
+  type               LinkType?
+  comments           String?
+  user               User      @relation(fields: [userId], references: [id])
+  userId             Int
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt()
+  deletedAt          DateTime?
+  expiresAt          DateTime? @db.Date
+  expiredRedirectUrl String?
+  qrcode             String?
+  Click              Click[] // Satu Link memiliki banyak Click
+  TagLink            TagLink[]
+  UTM                UTM?
+
+  @@map("links")
+}
+
+model Click {
+  id          String     @id @default(uuid())
+  linkId      Int // Relasi ke tabel Link
+  timestamp   DateTime   @default(now())
+  ip          String
+  location    String?
+  region      String?
+  country     String?
+  loc         String?
+  org         String?
+  postal      String?
+  timezone    String?
+  countryCode String?
+  userAgent   UserAgent? @relation(fields: [userAgentId], references: [id])
+  userAgentId String?
+
+  Link Link @relation(fields: [linkId], references: [id]) // Relasi ke tabel Link
+
+  @@map("clicks")
+}
+
+model UserAgent {
+  id             String   @id @default(uuid())
+  ua             String
+  browser        String?
+  browserVersion String?
+  os             String?
+  osVersion      String?
+  cpuArch        String?
+  deviceType     String?
+  engine         String?
+  createdAt      DateTime @default(now())
+
+  clicks Click[] // Relasi ke tabel Click
+
+  @@map("user_agents")
+}
+
+model Tag {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  TagLink   TagLink[]
+
+  @@map("tags")
+}
+
+model TagLink {
+  id        Int      @id @default(autoincrement())
+  link      Link     @relation(fields: [linkId], references: [id])
+  linkId    Int
+  tag       Tag      @relation(fields: [tagId], references: [id])
+  tagId     Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("tag_links")
+}
+
+model UTM {
+  id        Int       @id @default(autoincrement())
+  link      Link      @relation(fields: [linkId], references: [id], onDelete: Cascade)
+  linkId    Int       @unique
+  source    String? // UTM source
+  medium    String? // UTM medium
+  campaign  String? // UTM campaign
+  term      String? // UTM term
+  content   String? // UTM content
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@map("utms")
 }
 
 enum Role {
@@ -43,4 +201,19 @@ enum TokenType {
   REFRESH
   RESET_PASSWORD
   VERIFY_EMAIL
+}
+
+enum LinkType {
+  BENIGN
+  MALICIOUS
+  DEFACEMENT
+  MALWARE
+  PHISHING
+  BLOCKED
+}
+
+enum Provider {
+  DEFAULT
+  GOOGLE
+  GITHUB
 }

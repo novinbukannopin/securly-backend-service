@@ -3,6 +3,7 @@ import catchAsync from '../utils/catchAsync';
 import { authService, userService, tokenService, emailService } from '../services';
 import exclude from '../utils/exclude';
 import { User } from '@prisma/client';
+import config from '../config/config';
 
 const register = catchAsync(async (req, res) => {
   const { email, password } = req.body;
@@ -52,6 +53,37 @@ const verifyEmail = catchAsync(async (req, res) => {
   res.status(httpStatus.NO_CONTENT).send();
 });
 
+const googleAuthCallback = catchAsync(async (req, res) => {
+  try {
+    const user: User = req.user as User;
+
+    if (!user) {
+      return res.status(400).json({ message: 'Google authentication failed, user not found' });
+    }
+
+    let dbUser = await userService.getUserByEmail(user.email, [
+      'id',
+      'email',
+      'name',
+      'role',
+      'isEmailVerified'
+    ]);
+
+    if (!dbUser) {
+      dbUser = await userService.createUser(user.email, undefined, undefined, 'USER', 'GOOGLE');
+    }
+
+    const tokens = await tokenService.generateAuthTokens({ id: dbUser.id });
+
+    res.redirect(config.frontendUrl + '/callback?token=' + tokens.access.token);
+  } catch (error) {
+    console.error('Error during Google authentication', error);
+    return res.status(500).json({
+      message: 'Error during Google authentication'
+    });
+  }
+});
+
 export default {
   register,
   login,
@@ -60,5 +92,6 @@ export default {
   forgotPassword,
   resetPassword,
   sendVerificationEmail,
-  verifyEmail
+  verifyEmail,
+  googleAuthCallback
 };

@@ -57,5 +57,12 @@ export default {
       }
     },
     from: envVars.EMAIL_FROM
-  }
+  },
+  google: {
+    clientId: envVars.GOOGLE_CLIENT_ID,
+    clientSecret: envVars.GOOGLE_CLIENT_SECRET,
+    callbackURL: envVars.GOOGLE_CALLBACK_URL
+  },
+  frontendUrl: envVars.SECURLY_FRONTEND_BASE_URL,
+  ipinfoToken: envVars.IP_INFO_API_KEY
 };
