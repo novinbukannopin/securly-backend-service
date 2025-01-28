@@ -1,5 +1,5 @@
 import prisma from '../client';
-import { User, Link, UTM, LinkType, TagLink } from '@prisma/client';
+import { User, Link, UTM, LinkType } from '@prisma/client';
 import ApiError from '../utils/ApiError';
 import { CreateLinkBody } from '../types/link';
 import { UAParser } from 'ua-parser-js';
@@ -720,13 +720,6 @@ interface Insights {
   cpuArch: InsightRecord;
   deviceType: InsightRecord;
 }
-
-interface ClicksResponse {
-  data: { date: string; totalClicks: number }[];
-  totalClick: number;
-  insights: Insights;
-}
-
 
 const getClicks = async (
   user: User,
