@@ -7,6 +7,11 @@
   "prisma": {
     "seed": "ts-node prisma/seed.ts"
   },
+  "engines": {
+    "node": "22.13.1",
+    "pnpm": "9.0.5"
+  },
+  "packageManager": "pnpm@9.0.5",
   "scripts": {
     "rimraf": "./node_modules/rimraf/bin.js",
     "start": "yarn build && pm2 start ecosystem.config.json --no-daemon",
