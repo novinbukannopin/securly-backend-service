@@ -9,12 +9,12 @@
   },
   "engines": {
     "node": "22.13.1",
-    "pnpm": "9.0.5"
+    "pnpm": "9.1.2"
   },
-  "packageManager": "pnpm@9.0.5",
+  "packageManager": "pnpm@9.1.2",
   "scripts": {
     "rimraf": "./node_modules/rimraf/bin.js",
-    "start": "yarn build && pm2 start ecosystem.config.json --no-daemon",
+    "start": "pnpm build && pm2 start ecosystem.config.json --no-daemon",
     "dev": "cross-env NODE_ENV=development nodemon src/index.ts",
     "test": "docker-compose -f docker-compose.only-db-test.yml up -d && yarn db:push && jest -i --colors --verbose --detectOpenHandles && docker-compose -f docker-compose.only-db-test.yml down",
     "test:watch": "docker-compose -f docker-compose.only-db-test.yml up -d && yarn db:push && jest -i --watchAll && docker-compose -f docker-compose.only-db-test.yml down",
