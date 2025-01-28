@@ -4,6 +4,7 @@ import httpStatus from 'http-status';
 import type { Link, User, UTM } from '@prisma/client';
 import { extractParamsGet } from '../utils/extractParamsGet';
 import { AnalyticsData } from '../types/response';
+import config from '../config/config';
 
 const create = catchAsync(async (req, res) => {
   const user: User = req.user as User;
@@ -112,8 +113,12 @@ const redirect = catchAsync(async (req, res) => {
   const headers = req.headers;
   const { ip, userAgent } = { ip: headers['x-forwarded-for'], userAgent: headers['user-agent'] };
   const IP = Array.isArray(ip) ? ip[0] : ip;
-  const response = await linkService.goto(code, IP, userAgent);
-  res.redirect(response.originalUrl);
+  try {
+    const response = await linkService.goto(code, IP, userAgent);
+    res.redirect(response.originalUrl);
+  } catch (e) {
+    res.redirect(config.frontendUrl + '/404');
+  }
 });
 
 const getAnalytics = catchAsync(async (req, res) => {
@@ -128,7 +133,7 @@ export const getAnalyticsClicks = catchAsync(async (req, res) => {
   const user = req.user as User;
 
   if (filter && !['24h', '7 days', '28 days'].includes(filter as string)) {
-   throw new Error('Invalid filter');
+    throw new Error('Invalid filter');
   }
 
   const clickData = await linkService.getClicks(
@@ -141,7 +146,6 @@ export const getAnalyticsClicks = catchAsync(async (req, res) => {
 
   res.status(httpStatus.OK).send(clickData);
 });
-
 
 export default {
   create,

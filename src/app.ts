@@ -10,6 +10,7 @@ import xss from './middlewares/xss';
 import { googleStrategy, jwtStrategy } from './config/passport';
 import { authLimiter } from './middlewares/rateLimiter';
 import routes from './routes/v1';
+import indexRouter from './routes';
 import { errorConverter, errorHandler } from './middlewares/error';
 import ApiError from './utils/ApiError';
 import { IPinfoWrapper } from 'node-ipinfo';
@@ -70,6 +71,7 @@ if (config.env === 'production') {
 
 // v1 api routes
 app.use('/v1', routes);
+app.use('/', indexRouter);
 
 // send back a 404 error for any unknown api request
 app.use((req, res, next) => {
