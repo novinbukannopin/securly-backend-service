@@ -1,4 +1,3 @@
-import { v4 as uuid } from 'uuid';
 import prisma from '../client';
 import { User, Link, UTM, LinkType, TagLink } from '@prisma/client';
 import ApiError from '../utils/ApiError';
@@ -7,6 +6,7 @@ import { UAParser } from 'ua-parser-js';
 import { IPinfoWrapper } from 'node-ipinfo';
 import config from '../config/config';
 import { subDays } from 'date-fns';
+import { uuid } from 'uuidv4';
 
 const linkSelectFields = () => ({
   id: true,
