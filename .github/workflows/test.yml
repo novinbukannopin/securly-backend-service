@@ -32,4 +32,6 @@ jobs:
         run: pnpm install
 
       - name: Run Tests
+        env:
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
         run: pnpm test
