@@ -1,6 +1,6 @@
 {
   "name": "securly",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "URL Shortening System with Malicious Detection use Node JS, TypeScript, Express and Prisma",
   "main": "src/index.ts",
   "repository": "https://github.com/novinbukannopin/securly-backend-service",
