@@ -207,11 +207,11 @@ const getAll = async (
   };
 };
 
-const generateShortCode = async (): Promise<string> => {
+export const generateShortCode = async (): Promise<string> => {
   return uuid().slice(0, 8);
 };
 
-const ensureShortURLUnique = async (shortCode: string) => {
+export const ensureShortURLUnique = async (shortCode: string) => {
   const existing = await prisma.link.findUnique({
     where: { shortCode }
   });
