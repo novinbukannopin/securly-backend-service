@@ -1,5 +1,5 @@
 import httpStatus from 'http-status';
-import { TokenType, User } from '@prisma/client';
+import { TokenType } from '@prisma/client';
 import { authService, tokenService, userService } from '../../src/services';
 import { encryptPassword, isPasswordMatch } from '../../src/utils/encryption';
 import ApiError from '../../src/utils/ApiError';
@@ -9,8 +9,8 @@ jest.mock('../../src/client', () => ({
   token: {
     findFirst: jest.fn(),
     delete: jest.fn(),
-    deleteMany: jest.fn(),
-  },
+    deleteMany: jest.fn()
+  }
 }));
 
 jest.mock('../../src/services/user.service');
@@ -24,13 +24,16 @@ describe('Auth Service', () => {
         id: 'user123',
         email: 'test@example.com',
         password: 'hashedPassword',
-        username: 'testuser',
+        username: 'testuser'
       };
 
       (userService.getUserByEmail as jest.Mock).mockResolvedValue(mockUser);
       (isPasswordMatch as jest.Mock).mockResolvedValue(true);
 
-      const result = await authService.loginUserWithEmailAndPassword('test@example.com', 'password123');
+      const result = await authService.loginUserWithEmailAndPassword(
+        'test@example.com',
+        'password123'
+      );
 
       expect(result).toHaveProperty('id', 'user123');
       expect(result).not.toHaveProperty('password');
@@ -40,23 +43,30 @@ describe('Auth Service', () => {
       (userService.getUserByEmail as jest.Mock).mockResolvedValue({
         id: 'user123',
         email: 'test@example.com',
-        password: 'hashedPassword',
+        password: 'hashedPassword'
       });
       (isPasswordMatch as jest.Mock).mockResolvedValue(false);
 
-      await expect(authService.loginUserWithEmailAndPassword('test@example.com', 'wrongpassword'))
-        .rejects.toThrow(new ApiError(httpStatus.UNAUTHORIZED, 'Incorrect email or passwords'));
+      await expect(
+        authService.loginUserWithEmailAndPassword('test@example.com', 'wrongpassword')
+      ).rejects.toThrow(new ApiError(httpStatus.UNAUTHORIZED, 'Incorrect email or passwords'));
     });
 
     it('should throw an error if the user logs in with Google account', async () => {
       (userService.getUserByEmail as jest.Mock).mockResolvedValue({
         id: 'user123',
         email: 'google@example.com',
-        password: null,
+        password: null
       });
 
-      await expect(authService.loginUserWithEmailAndPassword('google@example.com', 'password'))
-        .rejects.toThrow(new ApiError(httpStatus.UNAUTHORIZED, 'This account was created using Google Login. Please log in using Google'));
+      await expect(
+        authService.loginUserWithEmailAndPassword('google@example.com', 'password')
+      ).rejects.toThrow(
+        new ApiError(
+          httpStatus.UNAUTHORIZED,
+          'This account was created using Google Login. Please log in using Google'
+        )
+      );
     });
   });
 
@@ -73,7 +83,9 @@ describe('Auth Service', () => {
     it('should throw an error if refresh token is not found', async () => {
       (prisma.token.findFirst as jest.Mock).mockResolvedValue(null);
 
-      await expect(authService.logout('invalidToken')).rejects.toThrow(new ApiError(httpStatus.NOT_FOUND, 'Not found'));
+      await expect(authService.logout('invalidToken')).rejects.toThrow(
+        new ApiError(httpStatus.NOT_FOUND, 'Not found')
+      );
     });
   });
 
@@ -81,7 +93,10 @@ describe('Auth Service', () => {
     it('should generate new auth tokens when given a valid refresh token', async () => {
       const mockTokenData = { id: 'token123', userId: 'user123' };
       (tokenService.verifyToken as jest.Mock).mockResolvedValue(mockTokenData);
-      (tokenService.generateAuthTokens as jest.Mock).mockResolvedValue({ accessToken: 'newAccessToken', refreshToken: 'newRefreshToken' });
+      (tokenService.generateAuthTokens as jest.Mock).mockResolvedValue({
+        accessToken: 'newAccessToken',
+        refreshToken: 'newRefreshToken'
+      });
 
       const result = await authService.refreshAuth('validRefreshToken');
 
@@ -93,7 +108,9 @@ describe('Auth Service', () => {
     it('should throw an error if refresh token is invalid', async () => {
       (tokenService.verifyToken as jest.Mock).mockRejectedValue(new Error());
 
-      await expect(authService.refreshAuth('invalidRefreshToken')).rejects.toThrow(new ApiError(httpStatus.UNAUTHORIZED, 'Please authenticate'));
+      await expect(authService.refreshAuth('invalidRefreshToken')).rejects.toThrow(
+        new ApiError(httpStatus.UNAUTHORIZED, 'Please authenticate')
+      );
     });
   });
 
@@ -105,15 +122,23 @@ describe('Auth Service', () => {
       (encryptPassword as jest.Mock).mockResolvedValue('newHashedPassword');
       (userService.updateUserById as jest.Mock).mockResolvedValue({});
 
-      await expect(authService.resetPassword('validResetToken', 'newPassword')).resolves.toBeUndefined();
-      expect(userService.updateUserById).toHaveBeenCalledWith('user123', { password: 'newHashedPassword' });
-      expect(prisma.token.deleteMany).toHaveBeenCalledWith({ where: { userId: 'user123', type: TokenType.RESET_PASSWORD } });
+      await expect(
+        authService.resetPassword('validResetToken', 'newPassword')
+      ).resolves.toBeUndefined();
+      expect(userService.updateUserById).toHaveBeenCalledWith('user123', {
+        password: 'newHashedPassword'
+      });
+      expect(prisma.token.deleteMany).toHaveBeenCalledWith({
+        where: { userId: 'user123', type: TokenType.RESET_PASSWORD }
+      });
     });
 
     it('should throw an error if reset token is invalid', async () => {
       (tokenService.verifyToken as jest.Mock).mockRejectedValue(new Error());
 
-      await expect(authService.resetPassword('invalidResetToken', 'newPassword')).rejects.toThrow(new ApiError(httpStatus.UNAUTHORIZED, 'Password reset failed'));
+      await expect(authService.resetPassword('invalidResetToken', 'newPassword')).rejects.toThrow(
+        new ApiError(httpStatus.UNAUTHORIZED, 'Password reset failed')
+      );
     });
   });
 
@@ -124,13 +149,17 @@ describe('Auth Service', () => {
 
       await expect(authService.verifyEmail('validVerifyToken')).resolves.toBeUndefined();
       expect(userService.updateUserById).toHaveBeenCalledWith('user123', { isEmailVerified: true });
-      expect(prisma.token.deleteMany).toHaveBeenCalledWith({ where: { userId: 'user123', type: TokenType.VERIFY_EMAIL } });
+      expect(prisma.token.deleteMany).toHaveBeenCalledWith({
+        where: { userId: 'user123', type: TokenType.VERIFY_EMAIL }
+      });
     });
 
     it('should throw an error if verification token is invalid', async () => {
       (tokenService.verifyToken as jest.Mock).mockRejectedValue(new Error());
 
-      await expect(authService.verifyEmail('invalidVerifyToken')).rejects.toThrow(new ApiError(httpStatus.UNAUTHORIZED, 'Email verification failed'));
+      await expect(authService.verifyEmail('invalidVerifyToken')).rejects.toThrow(
+        new ApiError(httpStatus.UNAUTHORIZED, 'Email verification failed')
+      );
     });
   });
 });

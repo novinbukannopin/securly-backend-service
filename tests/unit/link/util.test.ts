@@ -1,4 +1,3 @@
-import { v4 as uuid } from 'uuid';
 import { PrismaClient } from '@prisma/client';
 import ApiError from '../../../src/utils/ApiError';
 
@@ -70,13 +69,11 @@ describe('URL Shortener Functions', () => {
       });
 
       // Act & Assert
-      await expect(linkService.ensureShortURLUnique(shortCode))
-        .rejects
-        .toThrow(ApiError);
+      await expect(linkService.ensureShortURLUnique(shortCode)).rejects.toThrow(ApiError);
 
-      await expect(linkService.ensureShortURLUnique(shortCode))
-        .rejects
-        .toThrow('Short URL has been used');
+      await expect(linkService.ensureShortURLUnique(shortCode)).rejects.toThrow(
+        'Short URL has been used'
+      );
 
       expect(mockPrismaClient.link.findUnique).toHaveBeenCalledWith({
         where: { shortCode }

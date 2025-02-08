@@ -1,8 +1,7 @@
-import { Role, Provider, TokenType } from '@prisma/client';
-import httpStatus from 'http-status';
+import { TokenType } from '@prisma/client';
 import jwt from 'jsonwebtoken';
 import moment from 'moment';
-import { tokenService, userService } from '../../src/services';
+import { tokenService } from '../../src/services';
 import prisma from '../../src/client';
 
 jest.mock('../../src/client', () => ({
@@ -12,14 +11,14 @@ jest.mock('../../src/client', () => ({
     create: jest.fn() as jest.Mock,
     update: jest.fn() as jest.Mock,
     delete: jest.fn() as jest.Mock,
-    count: jest.fn() as jest.Mock,
+    count: jest.fn() as jest.Mock
   },
   link: {
-    count: jest.fn() as jest.Mock,
+    count: jest.fn() as jest.Mock
   },
   token: {
     create: jest.fn() as jest.Mock,
-    findFirst: jest.fn() as jest.Mock,
+    findFirst: jest.fn() as jest.Mock
   }
 }));
 
@@ -27,7 +26,7 @@ jest.mock('../../src/utils/encryption', () => ({ encryptPassword: jest.fn() as j
 
 jest.mock('jsonwebtoken', () => ({
   sign: jest.fn(() => 'mocked_token'),
-  verify: jest.fn(() => ({ sub: 1, exp: moment().add(1, 'day').unix() })),
+  verify: jest.fn(() => ({ sub: 1, exp: moment().add(1, 'day').unix() }))
 }));
 
 describe('Token Service', () => {
@@ -46,7 +45,12 @@ describe('Token Service', () => {
   describe('saveToken', () => {
     it('should save token in database', async () => {
       (prisma.token.create as jest.Mock).mockResolvedValue({ token: 'mocked_token' });
-      const savedToken = await tokenService.saveToken('mocked_token', 1, moment().add(1, 'day'), TokenType.ACCESS);
+      const savedToken = await tokenService.saveToken(
+        'mocked_token',
+        1,
+        moment().add(1, 'day'),
+        TokenType.ACCESS
+      );
       expect(savedToken).toHaveProperty('token', 'mocked_token');
       expect(prisma.token.create).toHaveBeenCalled();
     });
@@ -62,8 +66,9 @@ describe('Token Service', () => {
 
     it('should throw error if token not found', async () => {
       (prisma.token.findFirst as jest.Mock).mockResolvedValue(null);
-      await expect(tokenService.verifyToken('invalid_token', TokenType.ACCESS))
-        .rejects.toThrow('Token not found');
+      await expect(tokenService.verifyToken('invalid_token', TokenType.ACCESS)).rejects.toThrow(
+        'Token not found'
+      );
     });
   });
 
