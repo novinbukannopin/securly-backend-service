@@ -5,6 +5,7 @@ import type { Link, User, UTM } from '@prisma/client';
 import { extractParamsGet } from '../utils/extractParamsGet';
 import { AnalyticsData } from '../types/response';
 import config from '../config/config';
+import urlMetadata from 'url-metadata';
 
 const create = catchAsync(async (req, res) => {
   const user: User = req.user as User;
@@ -115,7 +116,39 @@ const redirect = catchAsync(async (req, res) => {
   const IP = Array.isArray(ip) ? ip[0] : ip;
   try {
     const response = await linkService.goto(code, IP, userAgent);
-    res.redirect(response.originalUrl);
+    const metadata = await urlMetadata(response.originalUrl);
+    // res.redirect(response.originalUrl);
+    res.status(200).send(`
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <meta property="og:image" content="${metadata['og:image']}">
+                    <meta property="description" content="${metadata.description}">
+                    <script src="https://cdn.tailwindcss.com"></script>
+                    <title>${metadata.title}</title>
+                     <script>
+                                        setTimeout(function() {
+                                               window.location.href = '${response.originalUrl}';
+                                            }, 2000);
+                                        </script>
+                </head>
+                <body class="h-screen flex justify-center items-center bg-gray-200">
+                <div class="relative flex justify-center items-center text-center h-full">
+                    <img src="https://s3.ap-southeast-3.amazonaws.com/bromen.id/public/1709533663287-loading.png"
+                    alt="Background" class="w-full h-auto md:w-full md:h-auto lg:w-full lg:h-full">
+                    <div class="absolute flex flex-col justify-center items-center gap-2 md:gap-8 lg:gap-12 mt-8 pt-0 md:pt-8">
+                        <img src="https://s3.ap-southeast-3.amazonaws.com/bromen.id/public/1709533583332-solomon.png"
+                            alt="Solomon" class="w-20 h-20 md:w-32 md:h-32 lg:w-40 lg:h-40 animate-[spin_10s_infinite]"
+                        >
+                        <p class="text-xs lg:text-lg font-regular animate-bounce">
+                        Redirecting ...
+                        </p>
+                    </div>
+                </div>
+                </body>
+                </html>
+            `);
   } catch (e) {
     res.redirect(config.frontendUrl + '/404');
   }

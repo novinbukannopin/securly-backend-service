@@ -124,6 +124,7 @@
     "swagger-ui-express": "^4.6.0",
     "ua-parser-js": "^2.0.0",
     "universal-user-agent": "^7.0.2",
+    "url-metadata": "^4.1.1",
     "user-agents": "^1.1.396",
     "uuid": "^11.0.5",
     "uuidv4": "^6.2.13",
