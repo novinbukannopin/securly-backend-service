@@ -128,11 +128,6 @@ const redirect = catchAsync(async (req, res) => {
           <meta property="og:title" content="${metadata.title}">
           <script src="https://cdn.tailwindcss.com"></script>
           <title>${metadata.title}</title>
-          <script>
-              setTimeout(function() {
-                  window.location.href = '${response.originalUrl}';
-              }, 2000);
-          </script>
       </head>
       <body class="h-screen flex justify-center items-center bg-gray-200">
           <div class="relative flex justify-center items-center text-center h-full">
@@ -145,6 +140,7 @@ const redirect = catchAsync(async (req, res) => {
       </body>
       </html>
   `);
+    res.redirect(response.originalUrl);
   } catch (e) {
     res.redirect(config.frontendUrl + '/404');
   }
