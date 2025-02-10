@@ -8,6 +8,15 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: testdb
+        ports:
+          - 5432:5432
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -23,15 +32,18 @@ jobs:
           cache: pnpm
 
       - name: Install Dependencies
-        run: pnpm i --frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
-      - name: Install pnpm
-        run: npm install -g pnpm
-
-      - name: Install Dependencies
-        run: pnpm install
+      - name: Setup Database
+        run: |
+          pnpm prisma generate
+          pnpm prisma migrate dev --name init
+        env:
+          DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/testdb"
 
       - name: Run Tests
         env:
+          DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/testdb"
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
         run: pnpm test
+

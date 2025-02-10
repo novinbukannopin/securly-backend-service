@@ -113,7 +113,8 @@ const redirect = catchAsync(async (req, res) => {
   const { code } = req.params;
   const headers = req.headers;
   const { ip, userAgent } = { ip: headers['x-forwarded-for'], userAgent: headers['user-agent'] };
-  const IP = Array.isArray(ip) ? ip[0] : ip;
+  const IP = '2a09:bac1:34e0:50::da:50';
+
   try {
     const response = await linkService.goto(code, IP, userAgent);
     const metadata = await urlMetadata(response.originalUrl);
@@ -126,8 +127,10 @@ const redirect = catchAsync(async (req, res) => {
           <meta property="og:image" content="${metadata['og:image']}">
           <meta property="og:description" content="${metadata.description}">
           <meta property="og:title" content="${metadata.title}">
-          <script src="https://cdn.tailwindcss.com"></script>
-          <title>${metadata.title}</title>
+          <meta http-equiv="refresh" content="0;url=${response.originalUrl}">
+          <script>
+              window.location.href = "${response.originalUrl}";
+          </script>
       </head>
       <body class="h-screen flex justify-center items-center bg-gray-200">
           <div class="relative flex justify-center items-center text-center h-full">
@@ -140,7 +143,6 @@ const redirect = catchAsync(async (req, res) => {
       </body>
       </html>
   `);
-    res.redirect(response.originalUrl);
   } catch (e) {
     res.redirect(config.frontendUrl + '/404');
   }
