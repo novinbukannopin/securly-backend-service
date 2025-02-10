@@ -31,5 +31,8 @@ jobs:
       - name: Install Dependencies
         run: pnpm install
 
+      - name: Load Environment Variables
+        run: cp .env.test .env
+
       - name: Run Tests
         run: pnpm test

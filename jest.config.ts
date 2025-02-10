@@ -1,3 +1,7 @@
+import dotenv from 'dotenv';
+
+dotenv.config({ path: '.env.test' });
+
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
