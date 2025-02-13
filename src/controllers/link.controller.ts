@@ -118,7 +118,6 @@ const redirect = catchAsync(async (req, res) => {
   try {
     const response = await linkService.goto(code, IP, userAgent);
     const metadata = await urlMetadata(response.originalUrl);
-    // res.redirect(response.originalUrl);
     res.status(200).send(`
       <html>
       <head>
