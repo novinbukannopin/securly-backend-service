@@ -751,19 +751,19 @@ const getClicks = async (
     where: {
       Link: {
         userId: user.id,
-        ...(shortCode ? { shortCode } : {}), // Filter berdasarkan shortCode jika ada
+        ...(shortCode ? { shortCode } : {}) // Filter berdasarkan shortCode jika ada
       },
       timestamp: {
         gte: rangeStartDate,
-        lte: rangeEndDate,
-      },
+        lte: rangeEndDate
+      }
     },
     select: {
       Link: {
         select: {
           shortCode: true,
-          originalUrl: true,
-        },
+          originalUrl: true
+        }
       },
       timestamp: true,
       location: true,
@@ -776,10 +776,10 @@ const getClicks = async (
           os: true,
           osVersion: true,
           cpuArch: true,
-          deviceType: true,
-        },
-      },
-    },
+          deviceType: true
+        }
+      }
+    }
   });
 
   // Process clicks data
@@ -795,7 +795,7 @@ const getClicks = async (
   const formattedData = Object.entries(clicksData)
     .map(([date, totalClicks]) => ({
       date,
-      totalClicks,
+      totalClicks
     }))
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
@@ -804,13 +804,13 @@ const getClicks = async (
     where: {
       Link: {
         userId: user.id,
-        ...(shortCode ? { shortCode } : {}), // Filter berdasarkan shortCode jika ada
+        ...(shortCode ? { shortCode } : {}) // Filter berdasarkan shortCode jika ada
       },
       timestamp: {
         gte: rangeStartDate,
-        lte: rangeEndDate,
-      },
-    },
+        lte: rangeEndDate
+      }
+    }
   });
 
   // Generate insights
@@ -823,7 +823,7 @@ const getClicks = async (
     os: {},
     osVersion: {},
     cpuArch: {},
-    deviceType: {},
+    deviceType: {}
   };
 
   rawClicksData.forEach((click) => {
@@ -836,7 +836,7 @@ const getClicks = async (
       'os',
       'osVersion',
       'cpuArch',
-      'deviceType',
+      'deviceType'
     ];
 
     fields.forEach((field) => {
@@ -851,12 +851,11 @@ const getClicks = async (
   return {
     click: {
       data: formattedData,
-      totalClick,
+      totalClick
     },
-    interaction: insights,
+    interaction: insights
   };
 };
-
 
 export default {
   create,

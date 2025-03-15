@@ -11,11 +11,11 @@ jest.mock('../../src/client', () => ({
     create: jest.fn() as jest.Mock,
     update: jest.fn() as jest.Mock,
     delete: jest.fn() as jest.Mock,
-    count: jest.fn() as jest.Mock,
+    count: jest.fn() as jest.Mock
   },
   link: {
-    count: jest.fn() as jest.Mock,
-  },
+    count: jest.fn() as jest.Mock
+  }
 }));
 
 jest.mock('../../src/utils/encryption', () => ({ encryptPassword: jest.fn() as jest.Mock }));
@@ -38,8 +38,9 @@ describe('User Service', () => {
 
     it('should throw error if email already exists', async () => {
       (prisma.user.findUnique as jest.Mock).mockResolvedValue({ id: 1, email: 'test@example.com' });
-      await expect(userService.createUser('test@example.com', 'password123'))
-        .rejects.toThrow(new ApiError(httpStatus.BAD_REQUEST, 'Email already taken'));
+      await expect(userService.createUser('test@example.com', 'password123')).rejects.toThrow(
+        new ApiError(httpStatus.BAD_REQUEST, 'Email already taken')
+      );
     });
   });
 
@@ -73,13 +74,16 @@ describe('User Service', () => {
     it('should update user if exists and email is not taken', async () => {
       (prisma.user.findUnique as jest.Mock).mockImplementation(async ({ where }) => {
         if (where.email && where.email !== 'test@example.com') {
-          return where.email === 'updated@example.com' ? { id: 2, email: 'updated@example.com' } : null;
+          return where.email === 'updated@example.com'
+            ? { id: 2, email: 'updated@example.com' }
+            : null;
         }
         return { id: 1, email: 'test@example.com' };
       });
 
-      await expect(userService.updateUserById(1, { email: 'updated@example.com' }))
-        .rejects.toThrow(new ApiError(httpStatus.BAD_REQUEST, 'Email already taken'));
+      await expect(userService.updateUserById(1, { email: 'updated@example.com' })).rejects.toThrow(
+        new ApiError(httpStatus.BAD_REQUEST, 'Email already taken')
+      );
     });
   });
 
@@ -95,8 +99,9 @@ describe('User Service', () => {
 
     it('should throw error if user not found', async () => {
       (prisma.user.findUnique as jest.Mock).mockResolvedValue(null);
-      await expect(userService.deleteUserById(99))
-        .rejects.toThrow(new ApiError(httpStatus.NOT_FOUND, 'User not found'));
+      await expect(userService.deleteUserById(99)).rejects.toThrow(
+        new ApiError(httpStatus.NOT_FOUND, 'User not found')
+      );
     });
   });
 });

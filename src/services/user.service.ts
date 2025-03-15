@@ -84,6 +84,7 @@ const getUserOwnProfile = async <Key extends keyof User>(
     'email',
     'name',
     'language',
+    'role',
     'username',
     'dob',
     'isEmailVerified',

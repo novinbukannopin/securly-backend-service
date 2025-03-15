@@ -34,7 +34,8 @@ const getOwnProfile = catchAsync(async (req, res) => {
     'name',
     'username',
     'dob',
-    'language'
+    'language',
+    'role'
   ]);
   res.send(users);
 });

@@ -44,6 +44,9 @@ importers:
       express-session:
         specifier: ^1.18.1
         version: 1.18.1
+      faker:
+        specifier: ^6.6.6
+        version: 6.6.6
       helmet:
         specifier: ^6.0.1
         version: 6.2.0
@@ -1603,6 +1606,9 @@ packages:
 
   extrareqp2@1.0.0:
     resolution: {integrity: sha512-Gum0g1QYb6wpPJCVypWP3bbIuaibcFiJcpuPM10YSXp/tzqi84x9PJageob+eN4xVRIOto4wjSGNLyMD54D2xA==}
+
+  faker@6.6.6:
+    resolution: {integrity: sha512-9tCqYEDHI5RYFQigXFwF1hnCwcWCOJl/hmll0lr5D2Ljjb0o4wphb69wikeJDz5qCEzXCoPvG6ss5SDP6IfOdg==}
 
   fast-deep-equal@3.1.3:
     resolution: {integrity: sha512-f3qQ9oQy9j2AhBe/H9VC91wLmKBCCU/gDOnKNAYG5hswO7BLKj09Hc5HYNz9cGI++xlpDCIgDaitVs03ATR84Q==}
@@ -5097,6 +5103,8 @@ snapshots:
       follow-redirects: 1.15.9(debug@4.3.7)
     transitivePeerDependencies:
       - debug
+
+  faker@6.6.6: {}
 
   fast-deep-equal@3.1.3: {}
 

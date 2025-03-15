@@ -45,7 +45,10 @@ const allRoles = {
     'profile:me',
 
     // REVIEW
-    'review:get-all'
+    'review:get-all',
+
+    // ANALYTICS
+    'admin:get-insight'
   ]
 };
 

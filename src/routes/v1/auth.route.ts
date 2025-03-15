@@ -33,7 +33,10 @@ router.get('/google', passport.authenticate('google', { scope: ['profile', 'emai
 
 router.get(
   '/google/callback',
-  passport.authenticate('google', { session: false, failureRedirect: config.frontendUrl + '/login' }),
+  passport.authenticate('google', {
+    session: false,
+    failureRedirect: config.frontendUrl + '/login'
+  }),
   authController.googleAuthCallback
 );
 
